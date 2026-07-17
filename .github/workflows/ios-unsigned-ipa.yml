@@ -1,0 +1,72 @@
+name: iOS unsigned IPA
+
+on:
+  push:
+    branches:
+      - ipad
+      - 'touch/**'
+  pull_request:
+    branches:
+      - ipad
+  workflow_dispatch: {}
+
+concurrency:
+  group: ios-unsigned-ipa-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ios-device-unsigned:
+    name: iPadOS device (unsigned)
+    runs-on: macos-15
+    steps:
+      - name: Check out the source
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Disable upstream push if the remote exists
+        run: |
+          if git remote get-url upstream >/dev/null 2>&1; then
+            git remote set-url --push upstream DISABLED
+          fi
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2.21
+        with:
+          key: ios-device-unsigned
+
+      - name: Cache iOS device dependencies (vcpkg)
+        uses: actions/cache@v5
+        with:
+          path: |
+            vendor/vcpkg
+            vendor/ios-arm64
+          key: ios-device-vcpkg-${{ hashFiles('vcpkg.json', 'ios/vcpkg-triplets/**', 'scripts/build-ios-deps.sh') }}
+          restore-keys: |
+            ios-device-vcpkg-
+
+      - name: Build iOS device dependencies
+        run: ./scripts/build-ios-deps.sh device
+
+      - name: Build unsigned iPadOS app
+        run: ./scripts/build-ios-device.sh unsigned
+
+      - name: Package unsigned IPA
+        run: |
+          set -euo pipefail
+          APP="build/ios-xcode-device/Release-iphoneos/OpenRCT2Touch.app"
+          PAYLOAD_ROOT="build/ipa-payload"
+          rm -rf "$PAYLOAD_ROOT"
+          mkdir -p "$PAYLOAD_ROOT/Payload" artifacts
+          cp -R "$APP" "$PAYLOAD_ROOT/Payload/"
+          (cd "$PAYLOAD_ROOT" && zip -rqy "$GITHUB_WORKSPACE/artifacts/OpenRCT2Touch-unsigned.ipa" Payload)
+
+      - name: Upload unsigned IPA artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: OpenRCT2Touch-unsigned-ipa
+          path: artifacts/OpenRCT2Touch-unsigned.ipa
+          if-no-files-found: error
