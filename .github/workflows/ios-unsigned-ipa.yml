@@ -33,6 +33,12 @@ jobs:
             git remote set-url --push upstream DISABLED
           fi
 
+      - name: Install ripgrep
+        run: |
+          # scripts/verify-ios-bundle.sh requires `rg`, which the GitHub-hosted
+          # macos-15 image does not preinstall (unlike a typical dev machine).
+          brew install ripgrep
+
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2.21
         with:
