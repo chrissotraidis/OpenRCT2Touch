@@ -44,8 +44,9 @@ jobs:
         with:
           key: ios-device-unsigned
 
-      - name: Cache iOS device dependencies (vcpkg)
-        uses: actions/cache@v5
+      - name: Restore iOS device dependencies (vcpkg)
+        id: ios-vcpkg-cache
+        uses: actions/cache/restore@v5
         with:
           path: |
             vendor/vcpkg
@@ -76,3 +77,15 @@ jobs:
           name: OpenRCT2Touch-unsigned-ipa
           path: artifacts/OpenRCT2Touch-unsigned.ipa
           if-no-files-found: error
+
+      - name: Save iOS device dependencies (vcpkg)
+        # actions/cache's own post-hook only saves on a job that's still
+        # succeeding; run this explicitly so a rebuilt dependency tree isn't
+        # thrown away just because a later step (e.g. the Xcode build) fails.
+        if: always() && steps.ios-vcpkg-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            vendor/vcpkg
+            vendor/ios-arm64
+          key: ios-device-vcpkg-${{ hashFiles('vcpkg.json', 'ios/vcpkg-triplets/**', 'scripts/build-ios-deps.sh') }}
