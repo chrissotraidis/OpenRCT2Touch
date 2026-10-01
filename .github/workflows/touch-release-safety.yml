@@ -29,3 +29,6 @@ jobs:
 
       - name: Audit release-facing source
         run: ./scripts/check-touch-release-safety.sh
+
+      - name: Verify Android uploads remain content-gated
+        run: python3 -B scripts/test-android-content-gate.py

@@ -658,6 +658,20 @@ jobs:
           pushd src/openrct2-android
           ./gradlew app:externalNativeBuildRelease -PabiFilter=${{ matrix.arch }} -PskipAssets -PskipJava
           popd
+      - name: Set up Python for the content audit
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Fetch the pinned content auditor
+        uses: actions/checkout@v6
+        with:
+          repository: chrissotraidis/padmint
+          ref: f0efbb738cac934559e986143343dc8720a6fb1d
+          path: .ci-padmint
+          persist-credentials: false
+      - name: Audit Android contents before upload
+        working-directory: .ci-padmint
+        run: python3 -B -m padmint audit "$GITHUB_WORKSPACE/src/openrct2-android/app/build/intermediates/cmake/release/obj/${{ matrix.arch }}"
       - name: Upload Native Libs
         uses: actions/upload-artifact@v6
         with:
@@ -718,6 +732,20 @@ jobs:
           popd
           mkdir -p artifacts
           mv src/openrct2-android/app/build/outputs/apk/release/app-release.apk artifacts/OpenRCT2-${{ needs.build_variables.outputs.name }}-android.apk
+      - name: Set up Python for the content audit
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Fetch the pinned content auditor
+        uses: actions/checkout@v6
+        with:
+          repository: chrissotraidis/padmint
+          ref: f0efbb738cac934559e986143343dc8720a6fb1d
+          path: .ci-padmint
+          persist-credentials: false
+      - name: Audit Android contents before upload
+        working-directory: .ci-padmint
+        run: python3 -B -m padmint audit "$GITHUB_WORKSPACE/artifacts"
       - name: Upload artifacts (CI)
         uses: actions/upload-artifact@v6
         with:
