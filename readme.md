@@ -15,6 +15,7 @@
   <img alt="iPadOS 15 or newer" src="https://img.shields.io/badge/iPadOS-15%2B-1f6f78?style=flat-square">
   <img alt="Native arm64" src="https://img.shields.io/badge/runtime-native%20arm64-d0953d?style=flat-square">
   <img alt="Physical device tested" src="https://img.shields.io/badge/device-M2%20iPad%20tested-4b7b4b?style=flat-square">
+  <a href="https://discord.gg/xwHfUD2bxW"><img alt="Join the Discord" src="https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?style=flat-square&amp;logo=discord&amp;logoColor=white"></a>
 </p>
 
 <p align="center">
@@ -157,7 +158,8 @@ bundle before packaging or installation. Only the explanatory
 
 ## Install on an iPad
 
-There is no downloadable public build yet. The supported installation method
+There is no downloadable public build yet; [PadMint](https://github.com/chrissotraidis/padmint) lists OpenRCT2 Touch under
+**Not available yet** and links back here. The supported installation method
 for this developer preview is to build from source on a Mac and sign the app
 for an iPad registered to your Apple development team.
 
@@ -361,6 +363,17 @@ follow once the remaining checks pass and a suitable distribution channel has
 been selected and reviewed. See the
 [`release checklist`](docs/RELEASE-CHECKLIST.md) for the exact gates. This is a
 project policy summary, not legal advice.
+
+## Community and support
+
+[Join the Discord](https://discord.gg/xwHfUD2bxW) for help and news. It is one
+community for OpenRCT2 Touch and its sibling projects, such as KartPad, BlueWake
+and RAtouch: ask about setup and installing, share how it runs on your iPad, and
+hear about new releases first. The upstream OpenRCT2 chat links further down are
+OpenRCT2's own.
+
+Found a bug? [Open an issue](https://github.com/chrissotraidis/OpenRCT2Touch/issues)
+with your iPad model, its iPadOS version, and the steps that led to it.
 
 ## Project boundary and credits
 
