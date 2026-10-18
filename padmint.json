@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "id": "openrct2touch",
+  "name": "OpenRCT2 Touch",
+  "game": "RollerCoaster Tycoon 2 (PC)",
+  "kind": "upstream-engine",
+  "status": "experimental",
+  "inputs": [
+    {
+      "type": "game-folder",
+      "when": "in-app",
+      "description": "Your own RollerCoaster Tycoon 2 or RollerCoaster Tycoon Classic installation folder (the one containing Data/g1.dat or Assets/g1.dat). You import it in OpenRCT2 Touch after installing; the build does not read it."
+    }
+  ],
+  "targets": {
+    "ios": {
+      "hosts": {
+        "macos-arm64": "experimental"
+      },
+      "tools": [
+        "git",
+        "cmake",
+        "ninja"
+      ],
+      "output": "ipa",
+      "check": "ipa",
+      "steps": [
+        {
+          "stage": "build",
+          "command": [
+            "/bin/bash",
+            "{repo}/scripts/build-padmint-ios.sh",
+            "{output}"
+          ]
+        }
+      ]
+    }
+  },
+  "requirements": {
+    "disk_gb": 15,
+    "tools": [
+      {
+        "name": "git",
+        "version_args": [
+          "--version"
+        ]
+      },
+      {
+        "name": "cmake",
+        "version_args": [
+          "--version"
+        ]
+      },
+      {
+        "name": "ninja",
+        "version_args": [
+          "--version"
+        ]
+      },
+      {
+        "name": "pkg-config",
+        "version_args": [
+          "--version"
+        ],
+        "player": true,
+        "note": "Install it with Homebrew: brew install pkg-config"
+      },
+      {
+        "name": "xcodebuild",
+        "version_args": [
+          "-version"
+        ],
+        "min_version": "26",
+        "player": true,
+        "note": "Install Xcode 26 or newer with its iOS platform, then select it in Xcode Settings > Locations > Command Line Tools; Command Line Tools alone are not enough."
+      },
+      {
+        "name": "xcrun",
+        "label": "Xcode iPhoneOS SDK",
+        "version_args": [
+          "--sdk",
+          "iphoneos",
+          "--show-sdk-path"
+        ],
+        "player": true,
+        "note": "Install Xcode 26 or newer with its iOS platform, then select it in Xcode Settings > Locations > Command Line Tools; Command Line Tools alone are not enough."
+      }
+    ]
+  },
+  "publication": {
+    "public_binaries": false,
+    "reason": "OpenRCT2 Touch publishes source rather than a public IPA (see its README); each player builds and signs their own copy. RollerCoaster Tycoon data is imported in the app."
+  }
+}
