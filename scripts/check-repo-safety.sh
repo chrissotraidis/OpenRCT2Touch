@@ -10,7 +10,9 @@ branch="$(git branch --show-current)"
 if [[ -z "$branch" && "${GITHUB_ACTIONS:-}" == "true" ]]; then
     branch="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME:-}}"
 fi
-if [[ "$branch" != "ipad" && "$branch" != touch/* ]]; then
+# A detached checkout (a release tag, or PadMint building an exact commit) is not a
+# branch anyone works on, so only named branches are restricted.
+if [[ -n "$branch" && "$branch" != "ipad" && "$branch" != touch/* ]]; then
     printf 'ERROR: unsafe branch %s; use ipad or touch/*\n' "$branch" >&2
     failures=$((failures + 1))
 fi
