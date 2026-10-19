@@ -158,10 +158,11 @@ bundle before packaging or installation. Only the explanatory
 
 ## Install on an iPad
 
-There is no downloadable public build yet; [PadMint](https://github.com/chrissotraidis/padmint) lists OpenRCT2 Touch under
-**Not available yet** and links back here. The supported installation method
-for this developer preview is to build from source on a Mac and sign the app
-for an iPad registered to your Apple development team.
+The easy way is [PadMint](https://github.com/chrissotraidis/padmint/releases/latest) 0.5.5 or newer on an
+Apple Silicon Mac with Xcode: choose **RollerCoaster Tycoon 2** and follow the page. PadMint builds
+OpenRCT2 Touch from this repository's latest release and saves an app file; install it on your iPad with
+your own Apple ID (Sideloadly, AltStore or SideStore), then import your own RCT2 or RCT Classic folder in
+the app. There is no public IPA. To build and sign it by hand instead, follow the steps below.
 
 ### Requirements
 
