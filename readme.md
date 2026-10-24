@@ -164,6 +164,9 @@ OpenRCT2 Touch from this repository's latest release and saves an app file; inst
 your own Apple ID (Sideloadly, AltStore or SideStore), then import your own RCT2 or RCT Classic folder in
 the app. There is no public IPA. To build and sign it by hand instead, follow the steps below.
 
+**No Mac?** You can build the iPad app on GitHub's free Mac from Windows, Linux or any computer
+with a web browser: follow [PadMint's steps](https://github.com/chrissotraidis/padmint#no-mac-build-on-githubs-mac).
+
 ### Requirements
 
 - An Apple Silicon Mac.
