@@ -56,10 +56,30 @@ for dependency in sdl2 icu freetype libpng zlib zstd libzip nlohmann-json; do
     fi
 done
 
-if [[ "$(plutil -extract 'CFBundleIcons~ipad.CFBundlePrimaryIcon.CFBundleIconName' raw "$APP/Info.plist")" != "AppIcon" ]]; then
+if [[ "$(plutil -extract 'CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName' raw "$APP/Info.plist")" != "AppIcon"
+    || "$(plutil -extract 'CFBundleIcons~ipad.CFBundlePrimaryIcon.CFBundleIconName' raw "$APP/Info.plist")" != "AppIcon" ]]; then
     echo "App bundle does not declare the compiled AppIcon catalog." >&2
     exit 1
 fi
+
+if [[ "$(plutil -extract UIDeviceFamily.0 raw "$APP/Info.plist")" != "1"
+    || "$(plutil -extract UIDeviceFamily.1 raw "$APP/Info.plist")" != "2" ]]; then
+    echo "App bundle must target both iPhone and iPad." >&2
+    exit 1
+fi
+
+for orientation_key in UISupportedInterfaceOrientations 'UISupportedInterfaceOrientations~ipad'; do
+    for orientation_index in 0 1; do
+        expected=UIInterfaceOrientationLandscapeLeft
+        if [[ "$orientation_index" == "1" ]]; then
+            expected=UIInterfaceOrientationLandscapeRight
+        fi
+        if [[ "$(plutil -extract "$orientation_key.$orientation_index" raw "$APP/Info.plist")" != "$expected" ]]; then
+            echo "App bundle must support both landscape orientations on iPhone and iPad." >&2
+            exit 1
+        fi
+    done
+done
 
 for icon_spec in "AppIcon60x60@2x.png:120" "AppIcon76x76@2x~ipad.png:152"; do
     IFS=: read -r icon_name expected_size <<< "$icon_spec"

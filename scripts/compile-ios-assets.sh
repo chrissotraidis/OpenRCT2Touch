@@ -31,6 +31,7 @@ xcrun actool "$ROOT/ios/App/Assets.xcassets" \
     --app-icon AppIcon \
     --compress-pngs \
     --development-region en \
+    --target-device iphone \
     --target-device ipad \
     --minimum-deployment-target 15.0 \
     --platform "$platform"
