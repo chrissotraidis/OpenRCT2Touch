@@ -8,11 +8,7 @@ set(OPENRCT2_TOUCH_ASSET_CATALOG "${CMAKE_CURRENT_LIST_DIR}/App/Assets.xcassets"
 
 add_executable(openrct2-touch MACOSX_BUNDLE
     "${CMAKE_CURRENT_LIST_DIR}/App/AppLifecycle.iOS.mm"
-    "${CMAKE_CURRENT_LIST_DIR}/platform/RCT2Importer.iOS.mm"
-    "${OPENRCT2_TOUCH_ASSET_CATALOG}")
-
-set_source_files_properties("${OPENRCT2_TOUCH_ASSET_CATALOG}" PROPERTIES
-    MACOSX_PACKAGE_LOCATION Resources)
+    "${CMAKE_CURRENT_LIST_DIR}/platform/RCT2Importer.iOS.mm")
 
 option(OPENRCT2_IOS_CODE_SIGNING "Allow Xcode to sign the iOS app" OFF)
 set(OPENRCT2_IOS_DEVELOPMENT_TEAM "" CACHE STRING "Apple development team used only for a signed iOS build")
@@ -41,6 +37,11 @@ target_link_options(openrct2-touch PRIVATE
 # force-loading there links the archive twice and duplicates Objective-C class
 # symbols.
 if (CMAKE_GENERATOR STREQUAL "Xcode")
+    # Xcode compiles asset catalog sources; Ninja uses actool below and must
+    # not copy the raw catalog into the audited app bundle.
+    target_sources(openrct2-touch PRIVATE "${OPENRCT2_TOUCH_ASSET_CATALOG}")
+    set_source_files_properties("${OPENRCT2_TOUCH_ASSET_CATALOG}" PROPERTIES
+        MACOSX_PACKAGE_LOCATION Resources)
     target_link_options(openrct2-touch PRIVATE
         "LINKER:-force_load,$<TARGET_FILE:openrct2-ui>")
 else ()
