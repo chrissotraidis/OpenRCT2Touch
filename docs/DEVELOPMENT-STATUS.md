@@ -1,6 +1,6 @@
 # OpenRCT2 Touch development status
 
-- **Last updated:** August 1, 2026
+- **Last updated:** November 5, 2026
 - **Working branch:** `ipad`
 - **Current goal:** [Goal 6 — Pointer, keyboard, and mouse play](../GOAL-LOOP.md#goal-6--pointer-keyboard-and-mouse-play)
 - **Accepted checkpoint:** physical Files import, persistence, and scenario load on July 16
@@ -12,6 +12,28 @@ keyboard, trackpad, and finger controls. The human tester reports that the game
 loads cleanly, appears stable, and works without an observed issue at this
 checkpoint. Goals 6 and 7 have useful on-device progress, but their complete
 end-to-end exit scripts are still pending.
+
+## Experimental iPhone compatibility
+
+The iOS bundle targets both iPhone and iPad with landscape orientation and
+icons for both device families. **iPhone support is experimental**; physical
+iPhone import, gameplay, layout, and performance validation remain pending.
+iPad remains the primary tested platform and the MVP acceptance target. This
+compatibility change does not close any device gate.
+
+The November 5 PR #15 validation passed repository and release-safety checks,
+the full macOS build and 1,000-tick headless smoke test (checksum
+`25232284e49cf2cb000000000000000000000000`), Ninja iOS device and Simulator
+builds, and the unsigned Xcode device build. All three iOS app bundles passed
+their audits. The full build exposed an existing Ninja packaging issue: the
+raw icon catalog was copied alongside its compiled assets. The catalog is now
+an Xcode-only target source; Ninja uses the existing `actool` compilation path.
+
+Clean iOS 27 Simulators for iPhone 17 Pro and iPad Pro 13-inch (M4) installed
+and launched the app in landscape, remained running, and displayed the native
+missing-game-data prompt. This verifies installation and initial launch only;
+no game data, gameplay, touch acceptance, or performance was tested in that
+smoke pass.
 
 ## Goal ledger
 

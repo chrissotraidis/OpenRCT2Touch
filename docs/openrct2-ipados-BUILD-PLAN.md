@@ -40,6 +40,11 @@ The project is "done enough to show" when, on a physical iPad:
 
 Everything else, including broad polish and public-store distribution, is out of scope for v1.
 
+The app also enables experimental iPhone compatibility through its universal
+iOS bundle configuration. iPad remains the primary tested platform and the MVP
+acceptance target; iPhone layouts, controls, and performance require separate
+physical-device validation.
+
 ### 1.2 Explicit non-goals for v1
 - Public App Store release. Distribution is currently source build or a selected private beta channel; see §12.
 - Apple Pencil and multiplayer support.

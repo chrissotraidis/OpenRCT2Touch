@@ -59,9 +59,14 @@ and merge the result into `ipad`; do not develop Touch changes on the mirror.
 
 ## What works today
 
+iPad remains the primary tested platform. **iPhone support is experimental**:
+source builds from `ipad` target both iPhone and iPad, but phone layouts,
+touch usability, and performance still need physical-device validation.
+
 | Area | State | Current evidence |
 | --- | :---: | --- |
 | Native iPad runtime | ✅ | Signed ARM64 iPadOS app, SDL Metal presentation, landscape Retina output |
+| iPhone compatibility | 🧪 | Universal app configuration; physical-device import, gameplay, layout, and performance validation remain |
 | User data and persistence | ✅ | User-owned RCT2 data in the app sandbox survives build replacement and relaunch; scenarios load on device |
 | Files folder import | ✅ | Standard RCT2 data imports through Files on a physical iPad, persists after relaunch, and loads scenarios; RCT Classic is also validated in Simulator |
 | Keyboard and trackpad | ✅ | Pointer controls, shortcuts, text entry, scrolling, and tuned viewport zoom work on device |
