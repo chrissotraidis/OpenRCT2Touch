@@ -727,6 +727,11 @@ namespace OpenRCT2::Config
      */
     static u8string FindRCT1Path()
     {
+#if defined(__APPLE__) && defined(__MACH__) && TARGET_OS_IOS
+        // iOS already validates and repairs this path during environment setup.
+        // RCT2 rediscovery must not replace it or repeat an optional file probe.
+        return Get().general.rct1Path;
+#else
         LOG_VERBOSE("config_find_rct1_path(...)");
 
         static std::vector<u8string> searchLocations = Platform::GetSearchablePathsRCT1();
@@ -766,6 +771,7 @@ namespace OpenRCT2::Config
             return exePath;
         }
         return {};
+#endif
     }
 
     static u8string FindRCT2SteamPath()

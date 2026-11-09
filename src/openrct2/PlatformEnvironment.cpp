@@ -17,6 +17,13 @@
 #include "core/Path.hpp"
 #include "core/String.hpp"
 #include "platform/Platform.h"
+#include "rct1/Csg.h"
+
+#include <exception>
+
+#if defined(__APPLE__) && defined(__MACH__)
+    #include <TargetConditionals.h>
+#endif
 
 using namespace OpenRCT2;
 
@@ -299,6 +306,33 @@ std::unique_ptr<IPlatformEnvironment> OpenRCT2::CreatePlatformEnvironment()
     }
     if (gCustomRCT1DataPath.empty())
     {
+#if defined(__APPLE__) && defined(__MACH__) && TARGET_OS_IOS
+        // iOS can relocate the app container while retaining its config and data.
+        // Discover RCT1 independently of the RCT2 first-run import flow.
+        const auto isUsableRCT1Path = [](const std::string& path) {
+            try
+            {
+                return RCT1DataPresentAtLocation(path);
+            }
+            catch (const std::exception& e)
+            {
+                LOG_WARNING("Unable to inspect optional RCT1 data: %s", e.what());
+                return false;
+            }
+        };
+        if (!isUsableRCT1Path(Config::Get().general.rct1Path))
+        {
+            for (const auto& location : Platform::GetSearchablePathsRCT1())
+            {
+                if (isUsableRCT1Path(location))
+                {
+                    Config::Get().general.rct1Path = location;
+                    Config::SaveToPath(configPath);
+                    break;
+                }
+            }
+        }
+#endif
         env->SetBasePath(DirBase::rct1, Config::Get().general.rct1Path);
     }
     if (gCustomRCT2DataPath.empty())
