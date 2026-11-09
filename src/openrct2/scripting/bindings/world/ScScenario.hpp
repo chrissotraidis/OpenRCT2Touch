@@ -11,12 +11,9 @@
 
 #ifdef ENABLE_SCRIPTING
 
-    #include "../../../Context.h"
     #include "../../../GameState.h"
     #include "../../../core/EnumMap.hpp"
-    #include "../../../core/StringTypes.h"
     #include "../../../scenario/Scenario.h"
-    #include "../../../world/Park.h"
     #include "../../ScriptEngine.h"
 
 namespace OpenRCT2::Scripting
@@ -210,6 +207,7 @@ namespace OpenRCT2::Scripting
                 JS_CGETSET_DEF("guests", ScScenarioObjective::guests_get, ScScenarioObjective::guests_set),
                 JS_CGETSET_DEF("year", ScScenarioObjective::year_get, ScScenarioObjective::year_set),
                 JS_CGETSET_DEF("excitement", ScScenarioObjective::excitement_get, ScScenarioObjective::excitement_set),
+                JS_CGETSET_DEF("length", ScScenarioObjective::length_get, ScScenarioObjective::length_set),
                 JS_CGETSET_DEF("monthlyIncome", ScScenarioObjective::monthlyIncome_get, ScScenarioObjective::monthlyIncome_set),
                 JS_CGETSET_DEF("parkValue", ScScenarioObjective::parkValue_get, ScScenarioObjective::parkValue_set),
             };
@@ -281,14 +279,14 @@ namespace OpenRCT2::Scripting
 
         static JSValue parkRatingWarningDays_get(JSContext* ctx, JSValue)
         {
-            return JS_NewUint32(ctx, getGameState().scenarioParkRatingWarningDays);
+            return JS_NewUint32(ctx, getGameState().park.scenarioParkRatingWarningDays);
         }
 
         static JSValue parkRatingWarningDays_set(JSContext* ctx, JSValue, JSValue jsValue)
         {
             JS_UNPACK_UINT32(value, ctx, jsValue);
             JS_THROW_IF_GAME_STATE_NOT_MUTABLE();
-            getGameState().scenarioParkRatingWarningDays = value;
+            getGameState().park.scenarioParkRatingWarningDays = value;
             return JS_UNDEFINED;
         }
 

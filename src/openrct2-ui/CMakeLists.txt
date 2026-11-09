@@ -201,6 +201,7 @@ if(MACOS_BUNDLE)
         PUBLIC ${ROOT_DIR}/contributors.md
         PUBLIC ${ROOT_DIR}/PRIVACY.md
         PUBLIC ${ROOT_DIR}/resources/mac/openrct2.icns
+        PUBLIC ${ROOT_DIR}/resources/mac/Assets.car
         )
 
     # Specify the resources to move to the bundle
@@ -210,6 +211,7 @@ if(MACOS_BUNDLE)
         ${ROOT_DIR}/contributors.md
         ${ROOT_DIR}/PRIVACY.md
         ${ROOT_DIR}/resources/mac/openrct2.icns
+        ${ROOT_DIR}/resources/mac/Assets.car
         )
 
     if (CMAKE_OSX_ARCHITECTURES MATCHES "${SYSTEM_MACOS_ARCH}")
@@ -281,6 +283,7 @@ if(MACOS_BUNDLE)
         MACOSX_BUNDLE_BUNDLE_NAME ${OUTPUT_NAME}
         MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/distribution/macos/Info.plist
         RESOURCE "${BUNDLE_RESOURCES}")
+
 
     install(CODE "
         include(BundleUtilities)

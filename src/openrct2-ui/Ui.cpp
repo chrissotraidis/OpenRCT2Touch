@@ -21,9 +21,7 @@
 #include <openrct2/OpenRCT2.h>
 #include <openrct2/PlatformEnvironment.h>
 #include <openrct2/audio/AudioContext.h>
-#include <openrct2/command_line/CommandLine.hpp>
 #include <openrct2/command_line/ExitCode.h>
-#include <openrct2/platform/Platform.h>
 #include <openrct2/ui/UiContext.h>
 #include <vector>
 
@@ -38,12 +36,6 @@
 using namespace OpenRCT2;
 using namespace OpenRCT2::Audio;
 using namespace OpenRCT2::Ui;
-
-template<typename T>
-static std::shared_ptr<T> ToShared(std::unique_ptr<T>&& src)
-{
-    return std::shared_ptr<T>(std::move(src));
-}
 
 static int RunOpenRCT2(int argc, const char** argv)
 {

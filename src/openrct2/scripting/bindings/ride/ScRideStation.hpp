@@ -11,9 +11,13 @@
 
 #ifdef ENABLE_SCRIPTING
 
-    #include "../../../Context.h"
-    #include "../../../ride/Ride.h"
+    #include "../../../Identifiers.h"
     #include "../../ScriptEngine.h"
+
+namespace OpenRCT2
+{
+    struct RideStation;
+}
 
 namespace OpenRCT2::Scripting
 {
@@ -47,6 +51,7 @@ namespace OpenRCT2::Scripting
         static JSValue exit_get(JSContext* ctx, JSValue thisVal);
         static JSValue exit_set(JSContext* ctx, JSValue thisVal, JSValue value);
         static JSValue queueTime_get(JSContext* ctx, JSValue thisVal);
+        static JSValue segmentLength_get(JSContext* ctx, JSValue thisVal);
     };
 
 } // namespace OpenRCT2::Scripting

@@ -12,14 +12,13 @@
 #include "CursorRepository.h"
 #include "SDLException.h"
 #include "TextComposition.h"
-#include "UiStringIds.h"
 #include "WindowManager.h"
 #include "drawing/engines/DrawingEngineFactory.hpp"
 #include "input/ShortcutIds.h"
 #include "input/ShortcutManager.h"
+#include "interface/Chat.h"
 #include "interface/InGameConsole.h"
 #include "interface/Theme.h"
-#include "interface/Viewport.h"
 #include "interface/ViewportInteraction.h"
 #include "scripting/UiExtensions.h"
 #include "title/TitleSequencePlayer.h"
@@ -41,17 +40,16 @@
 #include <openrct2/audio/AudioMixer.h>
 #include <openrct2/config/Config.h>
 #include <openrct2/core/String.hpp>
+#include <openrct2/drawing/Drawing.Screen.h>
 #include <openrct2/drawing/Drawing.h>
 #include <openrct2/drawing/IDrawingEngine.h>
 #include <openrct2/drawing/NewDrawing.h>
 #include <openrct2/drawing/RenderTarget.h>
-#include <openrct2/interface/Chat.h>
-#include <openrct2/platform/Platform.h>
+#include <openrct2/interface/ScreenCoords.hpp>
+#include <openrct2/interface/Viewport.h>
 #include <openrct2/scenes/title/TitleSequencePlayer.h>
-#include <openrct2/scripting/ScriptEngine.h>
 #include <openrct2/ui/UiContext.h>
 #include <openrct2/ui/WindowManager.h>
-#include <openrct2/world/Location.hpp>
 #include <vector>
 
 #if defined(__APPLE__) && defined(__MACH__)
@@ -892,6 +890,11 @@ public:
         return (windowFlags & SDL_WINDOW_INPUT_FOCUS) != 0;
     }
 
+    void requestUserAttention() override
+    {
+        SDL_FlashWindow(_window, SDL_FLASH_UNTIL_FOCUSED);
+    }
+
     bool IsMinimised() override
     {
         uint32_t windowFlags = GetWindowFlags();
@@ -1526,7 +1529,7 @@ private:
 #if defined(__APPLE__) && defined(__MACH__) && TARGET_OS_IOS
         flags |= SDL_WINDOW_BORDERLESS;
 #endif
-        if (Config::Get().general.drawingEngine == DrawingEngine::OpenGL)
+        if (Config::Get().general.drawingEngine == DrawingEngine::openGL)
         {
             flags |= SDL_WINDOW_OPENGL;
         }

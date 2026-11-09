@@ -38,8 +38,8 @@ for script in \
     bash -n "$ROOT/$script"
 done
 
-if [[ "$(plutil -extract CFBundleIdentifier raw "$ROOT/ios/App/Info.plist")" != "$OPENRCT2_TOUCH_BUNDLE_ID" ]]; then
-    echo "Info.plist does not use the maintained bundle identifier." >&2
+if [[ "$(plutil -extract CFBundleIdentifier raw "$ROOT/ios/App/Info.plist")" != '${MACOSX_BUNDLE_GUI_IDENTIFIER}' ]]; then
+    echo "Info.plist must use the configured CMake bundle identifier." >&2
     exit 1
 fi
 

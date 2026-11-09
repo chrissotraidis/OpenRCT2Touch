@@ -28,7 +28,7 @@
 #include "core/Path.hpp"
 #include "entity/EntityRegistry.h"
 #include "entity/EntityTweener.h"
-#include "interface/Window.h"
+#include "interface/WindowTypes.h"
 #include "localisation/Formatting.h"
 #include "localisation/StringIds.h"
 #include "management/NewsItem.h"
@@ -115,10 +115,10 @@ namespace OpenRCT2
 
         enum class ReplayMode
         {
-            NONE = 0,
-            RECORDING,
-            PLAYING,
-            NORMALISATION,
+            none = 0,
+            recording,
+            playing,
+            normalisation,
         };
 
         static constexpr std::array modeToName = {
@@ -135,22 +135,22 @@ namespace OpenRCT2
 
         virtual bool IsReplaying() const override
         {
-            return _mode == ReplayMode::PLAYING;
+            return _mode == ReplayMode::playing;
         }
 
         virtual bool IsRecording() const override
         {
-            return _mode == ReplayMode::RECORDING;
+            return _mode == ReplayMode::recording;
         }
 
         virtual bool IsNormalising() const override
         {
-            return _mode == ReplayMode::NORMALISATION;
+            return _mode == ReplayMode::normalisation;
         }
 
         virtual bool ShouldDisplayNotice() const override
         {
-            return IsRecording() && _recordType == RecordType::NORMAL;
+            return IsRecording() && _recordType == RecordType::normal;
         }
 
         virtual void AddGameAction(uint32_t tick, const GameAction* action) override
@@ -171,27 +171,27 @@ namespace OpenRCT2
         // Function runs each Tick.
         virtual void Update() override
         {
-            if (_mode == ReplayMode::NONE)
+            if (_mode == ReplayMode::none)
                 return;
 
             const auto currentTicks = getGameState().currentTicks;
 
-            if ((_mode == ReplayMode::RECORDING || _mode == ReplayMode::NORMALISATION) && currentTicks == _nextChecksumTick)
+            if ((_mode == ReplayMode::recording || _mode == ReplayMode::normalisation) && currentTicks == _nextChecksumTick)
             {
-                EntitiesChecksum checksum = getGameState().entities.GetAllEntitiesChecksum();
+                EntitiesChecksum checksum = getGameState().entities.getAllEntitiesChecksum();
                 AddChecksum(currentTicks, std::move(checksum));
 
                 _nextChecksumTick = currentTicks + ChecksumTicksDelta();
             }
 
-            if (_mode == ReplayMode::RECORDING)
+            if (_mode == ReplayMode::recording)
             {
                 if (currentTicks >= _currentRecording->tickEnd)
                 {
                     StopRecording();
                 }
             }
-            else if (_mode == ReplayMode::PLAYING)
+            else if (_mode == ReplayMode::playing)
             {
 #ifndef DISABLE_NETWORK
                 // If the network is disabled we will only get a dummy hash which will cause
@@ -209,7 +209,7 @@ namespace OpenRCT2
                     StopPlayback();
                 }
             }
-            else if (_mode == ReplayMode::NORMALISATION)
+            else if (_mode == ReplayMode::normalisation)
             {
                 ReplayCommands();
 
@@ -220,7 +220,7 @@ namespace OpenRCT2
                     StopRecording();
 
                     // Reset mode, in normalisation nothing will set it.
-                    _mode = ReplayMode::NONE;
+                    _mode = ReplayMode::none;
                 }
             }
         }
@@ -241,10 +241,10 @@ namespace OpenRCT2
         {
             // If using silent recording, discard whatever recording there is going on, even if a new silent recording is to be
             // started.
-            if (_mode == ReplayMode::RECORDING && _recordType == RecordType::SILENT)
+            if (_mode == ReplayMode::recording && _recordType == RecordType::silent)
                 StopRecording(true);
 
-            if (_mode != ReplayMode::NONE && _mode != ReplayMode::NORMALISATION)
+            if (_mode != ReplayMode::none && _mode != ReplayMode::normalisation)
                 return false;
 
             auto& gameState = getGameState();
@@ -281,8 +281,8 @@ namespace OpenRCT2
 
             TakeGameStateSnapshot(replayData->gameStateSnapshots);
 
-            if (_mode != ReplayMode::NORMALISATION)
-                _mode = ReplayMode::RECORDING;
+            if (_mode != ReplayMode::normalisation)
+                _mode = ReplayMode::recording;
 
             _currentRecording = std::move(replayData);
             _recordType = rt;
@@ -293,13 +293,13 @@ namespace OpenRCT2
 
         virtual bool StopRecording(bool discard = false) override
         {
-            if (_mode != ReplayMode::RECORDING && _mode != ReplayMode::NORMALISATION)
+            if (_mode != ReplayMode::recording && _mode != ReplayMode::normalisation)
                 return false;
 
             if (discard)
             {
                 _currentRecording.reset();
-                _mode = ReplayMode::NONE;
+                _mode = ReplayMode::none;
                 return true;
             }
 
@@ -308,7 +308,7 @@ namespace OpenRCT2
             _currentRecording->tickEnd = currentTicks;
 
             {
-                EntitiesChecksum checksum = getGameState().entities.GetAllEntitiesChecksum();
+                EntitiesChecksum checksum = getGameState().entities.getAllEntitiesChecksum();
                 AddChecksum(currentTicks, std::move(checksum));
             }
 
@@ -317,7 +317,7 @@ namespace OpenRCT2
             // Serialise Body.
             DataSerialiser recSerialiser(true);
             Serialise(recSerialiser, *_currentRecording);
-            auto& stream = recSerialiser.GetStream();
+            auto& stream = recSerialiser.getStream();
 
             MemoryStream compressed;
             stream.SetPosition(0);
@@ -339,12 +339,13 @@ namespace OpenRCT2
             }
 
             // When normalizing the output we don't touch the mode.
-            if (_mode != ReplayMode::NORMALISATION)
-                _mode = ReplayMode::NONE;
+            if (_mode != ReplayMode::normalisation)
+                _mode = ReplayMode::none;
 
             _currentRecording.reset();
 
-            News::Item* news = News::AddItemToQueue(News::ItemType::blank, "Replay recording stopped", 0);
+            News::Item* news = getGameState().park.newsItems.addItemToQueue(
+                News::ItemType::blank, "Replay recording stopped", 0);
             news->setFlags(News::ItemFlags::hasButton); // Has no subject.
 
             return true;
@@ -354,11 +355,11 @@ namespace OpenRCT2
         {
             ReplayRecordData* data = nullptr;
 
-            if (_mode == ReplayMode::PLAYING)
+            if (_mode == ReplayMode::playing)
                 data = _currentReplay.get();
-            else if (_mode == ReplayMode::RECORDING)
+            else if (_mode == ReplayMode::recording)
                 data = _currentRecording.get();
-            else if (_mode == ReplayMode::NORMALISATION)
+            else if (_mode == ReplayMode::normalisation)
                 data = _currentRecording.get();
 
             if (data == nullptr)
@@ -368,9 +369,9 @@ namespace OpenRCT2
             info.Name = data->name;
             info.Version = data->version;
             info.TimeRecorded = data->timeRecorded;
-            if (_mode == ReplayMode::RECORDING)
+            if (_mode == ReplayMode::recording)
                 info.Ticks = getGameState().currentTicks - data->tickStart;
-            else if (_mode == ReplayMode::PLAYING)
+            else if (_mode == ReplayMode::playing)
                 info.Ticks = data->tickEnd - data->tickStart;
             info.NumCommands = static_cast<uint32_t>(data->commands.size());
             info.NumChecksums = static_cast<uint32_t>(data->checksums.size());
@@ -421,7 +422,7 @@ namespace OpenRCT2
 
         void StartPlayback(const std::string& file) override
         {
-            if (_mode != ReplayMode::NONE && _mode != ReplayMode::NORMALISATION)
+            if (_mode != ReplayMode::none && _mode != ReplayMode::normalisation)
                 throw std::invalid_argument(std::string("Unexpected mode ") + modeToName[EnumValue(_mode)]);
 
             auto replayData = std::make_unique<ReplayRecordData>();
@@ -451,8 +452,8 @@ namespace OpenRCT2
             // Make sure game is not paused.
             gGamePaused = 0;
 
-            if (_mode != ReplayMode::NORMALISATION)
-                _mode = ReplayMode::PLAYING;
+            if (_mode != ReplayMode::normalisation)
+                _mode = ReplayMode::playing;
         }
 
         virtual bool IsPlaybackStateMismatching() const override
@@ -462,22 +463,23 @@ namespace OpenRCT2
 
         virtual bool StopPlayback() override
         {
-            if (_mode != ReplayMode::PLAYING && _mode != ReplayMode::NORMALISATION)
+            if (_mode != ReplayMode::playing && _mode != ReplayMode::normalisation)
                 return false;
 
             LoadAndCompareSnapshot(_currentReplay->gameStateSnapshots);
 
             // During normal playback we pause the game if stopped.
-            if (_mode == ReplayMode::PLAYING)
+            if (_mode == ReplayMode::playing)
             {
-                News::Item* news = News::AddItemToQueue(News::ItemType::blank, "Replay playback complete", 0);
+                News::Item* news = getGameState().park.newsItems.addItemToQueue(
+                    News::ItemType::blank, "Replay playback complete", 0);
                 news->setFlags(News::ItemFlags::hasButton); // Has no subject.
             }
 
             // When normalizing the output we don't touch the mode.
-            if (_mode != ReplayMode::NORMALISATION)
+            if (_mode != ReplayMode::normalisation)
             {
-                _mode = ReplayMode::NONE;
+                _mode = ReplayMode::none;
             }
 
             _currentReplay.reset();
@@ -487,7 +489,7 @@ namespace OpenRCT2
 
         virtual bool NormaliseReplay(const std::string& file, const std::string& outFile) override
         {
-            _mode = ReplayMode::NORMALISATION;
+            _mode = ReplayMode::normalisation;
 
             try
             {
@@ -498,7 +500,7 @@ namespace OpenRCT2
                 return false;
             }
 
-            if (!StartRecording(outFile, k_MaxReplayTicks, RecordType::NORMAL))
+            if (!StartRecording(outFile, k_MaxReplayTicks, RecordType::normal))
             {
                 StopPlayback();
                 return false;
@@ -515,9 +517,9 @@ namespace OpenRCT2
             switch (_recordType)
             {
                 default:
-                case RecordType::NORMAL:
+                case RecordType::normal:
                     return kNormalRecordingChecksumTicks;
-                case RecordType::SILENT:
+                case RecordType::silent:
                     return kSilentRecordingChecksumTicks;
             }
         }
@@ -539,7 +541,7 @@ namespace OpenRCT2
                 auto& gameState = getGameState();
                 importer->Import(gameState);
 
-                EntityTweener::Get().Reset();
+                EntityTweener::get().reset();
 
                 // Load all map global variables.
                 DataSerialiser parkParamsDs(false, data.parkParams);
@@ -685,7 +687,7 @@ namespace OpenRCT2
             serialiser << command.commandIndex;
 
             uint32_t actionType = 0;
-            if (serialiser.IsSaving())
+            if (serialiser.isSaving())
             {
                 if (!command.action)
                 {
@@ -695,7 +697,7 @@ namespace OpenRCT2
             }
             serialiser << actionType;
 
-            if (serialiser.IsLoading())
+            if (serialiser.isLoading())
             {
                 command.action = Create(static_cast<GameCommand>(actionType));
             }
@@ -748,7 +750,7 @@ namespace OpenRCT2
             uint32_t countCommands = static_cast<uint32_t>(data.commands.size());
             serialiser << countCommands;
 
-            if (serialiser.IsSaving())
+            if (serialiser.isSaving())
             {
                 for (auto& command : data.commands)
                 {
@@ -769,7 +771,7 @@ namespace OpenRCT2
             uint32_t countChecksums = static_cast<uint32_t>(data.checksums.size());
             serialiser << countChecksums;
 
-            if (serialiser.IsLoading())
+            if (serialiser.isLoading())
             {
                 data.checksums.resize(countChecksums);
             }
@@ -799,7 +801,7 @@ namespace OpenRCT2
             {
                 _currentReplay->checksumIndex++;
 
-                EntitiesChecksum checksum = getGameState().entities.GetAllEntitiesChecksum();
+                EntitiesChecksum checksum = getGameState().entities.getAllEntitiesChecksum();
                 if (savedChecksum.second.raw != checksum.raw)
                 {
                     uint32_t replayTick = currentTicks - _currentReplay->tickStart;
@@ -807,7 +809,7 @@ namespace OpenRCT2
                     // Detected different game state.
                     LOG_WARNING(
                         "Different sprite checksum at tick %u (Replay Tick: %u) ; Saved: %s, Current: %s", currentTicks,
-                        replayTick, savedChecksum.second.ToString().c_str(), checksum.ToString().c_str());
+                        replayTick, savedChecksum.second.toString().c_str(), checksum.toString().c_str());
 
                     _faultyChecksumIndex = checksumIndex;
                 }
@@ -815,8 +817,8 @@ namespace OpenRCT2
                 {
                     // Good state.
                     LOG_VERBOSE(
-                        "Good state at tick %u ; Saved: %s, Current: %s", currentTicks, savedChecksum.second.ToString().c_str(),
-                        checksum.ToString().c_str());
+                        "Good state at tick %u ; Saved: %s, Current: %s", currentTicks, savedChecksum.second.toString().c_str(),
+                        checksum.toString().c_str());
                 }
             }
         }
@@ -833,13 +835,13 @@ namespace OpenRCT2
             {
                 const ReplayCommand& command = (*replayQueue.begin());
 
-                if (_mode == ReplayMode::PLAYING)
+                if (_mode == ReplayMode::playing)
                 {
                     // If this is a normal playback wait for the correct tick.
                     if (command.tick != currentTicks)
                         break;
                 }
-                else if (_mode == ReplayMode::NORMALISATION)
+                else if (_mode == ReplayMode::normalisation)
                 {
                     // Allow one entry per tick.
                     if (currentTicks != _nextReplayTick)
@@ -860,7 +862,7 @@ namespace OpenRCT2
                 }
 
                 // Focus camera on event.
-                if (!gSilentReplays && isPositionValid && !result.position.IsNull())
+                if (!gSilentReplays && isPositionValid && !result.position.isNull())
                 {
                     auto* mainWindow = WindowGetMain();
                     if (mainWindow != nullptr)
@@ -872,14 +874,14 @@ namespace OpenRCT2
         }
 
     private:
-        ReplayMode _mode = ReplayMode::NONE;
+        ReplayMode _mode = ReplayMode::none;
         std::unique_ptr<ReplayRecordData> _currentRecording;
         std::unique_ptr<ReplayRecordData> _currentReplay;
         int32_t _faultyChecksumIndex = -1;
         uint32_t _commandId = 0;
         uint32_t _nextChecksumTick = 0;
         uint32_t _nextReplayTick = 0;
-        RecordType _recordType = RecordType::NORMAL;
+        RecordType _recordType = RecordType::normal;
     };
 
     std::unique_ptr<IReplayManager> CreateReplayManager()

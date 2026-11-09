@@ -11,16 +11,16 @@
 
 #include "core/FlagHolder.hpp"
 #include "core/StringTypes.h"
-#include "world/Location.hpp"
+#include "interface/ScreenCoords.hpp"
 
 namespace OpenRCT2
 {
     enum class InputFlag : uint8_t
     {
         widgetPressed,
-        // The dropdown can stay open if the mouse is released, set on flag Dropdown::Flag::StayOpen.
-        dropdownStayOpen,
-        // The mouse has been released and the dropdown is still open. dropdownStayOpen is already set if this happens.
+        // The dropdown autocloses if the mouse is released, set on flag Dropdown::Flag::autoClose.
+        dropdownAutoclose,
+        // The mouse has been released and the dropdown is still open.
         dropdownMouseUp,
         toolActive,
         // Left click on a viewport

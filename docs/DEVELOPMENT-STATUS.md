@@ -1,6 +1,6 @@
 # OpenRCT2 Touch development status
 
-- **Last updated:** November 5, 2026
+- **Last updated:** November 9, 2026
 - **Working branch:** `ipad`
 - **Current goal:** [Goal 6 — Pointer, keyboard, and mouse play](../GOAL-LOOP.md#goal-6--pointer-keyboard-and-mouse-play)
 - **Accepted checkpoint:** physical Files import, persistence, and scenario load on July 16
@@ -35,6 +35,28 @@ missing-game-data prompt. This verifies installation and initial launch only;
 no game data, gameplay, touch acceptance, or performance was tested in that
 smoke pass.
 
+## Source-build and optional data maintenance
+
+The maintenance fixes for [issue #16](https://github.com/chrissotraidis/OpenRCT2Touch/issues/16)
+add optional RCT1 discovery at `Documents/rct1` and repair invalid saved paths
+without overriding valid paths or explicit command-line choices. The native
+picker still imports RCT2/RCT Classic. Source builds also select the host Mac's
+architecture and accept `OPENRCT2_TOUCH_BUNDLE_ID` through both iOS generators;
+the macOS host tools target macOS 11.0 for compatibility with current Xcode.
+The README documents the contributor's Intel Homebrew workaround. These
+maintenance fixes are retained in the upstream v0.5.7 source update.
+
+November 9 verification passed the native macOS build and 1,000-tick headless
+smoke, full iOS device/Simulator and unsigned Xcode builds with custom/default
+bundle IDs, and rejection of a mismatched expected identifier. An x86_64 host
+build and CLI run under Rosetta generated the same engine assets as the native
+build; physical Intel and its Homebrew installation remain untested locally.
+Ten Simulator cases checked RCT1 path selection/persistence with synthetic
+fixtures, including unreadable files. Two more cases used user-owned RCT2
+data only inside an installed Simulator sandbox and reached the rendered title
+screen after RCT2 rediscovery with unreadable optional RCT1 data. Temporary
+sandboxes were removed. Physical RCT1 gameplay remains contributor-reported.
+
 ## Goal ledger
 
 | Goal | State | Evidence or remaining gate |
@@ -53,10 +75,28 @@ smoke pass.
 
 ## Current proof
 
-- The Touch branch is synchronized through upstream OpenRCT2 `develop` commit
-  `69872010ae6b` from July 31, 2026. The merge passed repository safety, the
-  macOS build and 1,000-tick headless run, both iOS dependency slices, both iOS
-  app bundles, and the full iPad Simulator lifecycle verification.
+- The Touch source update is pinned to upstream OpenRCT2 **v0.5.7**, commit
+  `44472e4ff821fa15711624b7fceb87cb9260c8d6` (November 1, 2026 release).
+  It preserves Touch input, SDL lifecycle, sandbox handling, optional RCT1
+  discovery, universal device metadata, and custom bundle identifiers. Engine
+  assets now use objects v1.8.0 and title sequences v0.5.6. This source update
+  does not close physical-device acceptance gates.
+- November 9 v0.5.7 checks passed the native macOS build and unchanged
+  1,000-tick headless checksum, both Ninja iOS bundles, an unsigned Xcode
+  device build with a custom bundle ID, repository/release-safety checks, and
+  the Android upload-content gate. A native headless test loaded a tracked
+  older `.park`, ran an API 116 plugin on API 124, saved a new copy, and reloaded
+  it without changing the original fixture.
+- The v0.5.7 iPad Simulator passed lifecycle/sandbox verification, scenario
+  loading, plugin execution, save-copy/reload, and game-tick progression across
+  background/foreground resume. Loaded-park frame checks used edge scrolling
+  disabled in the test sandbox to prevent the unattended cursor from moving
+  the camera; production input behavior is unchanged. Optional unreadable RCT1
+  data did not block RCT2 rediscovery or rendering.
+- A clean iPhone Simulator installed and launched to the landscape data-import
+  prompt. iOS engine version labels now come from `Version.h`, so a clean fork
+  checkout displays v0.5.7 without needing upstream Git tags. The separate
+  Touch bundle version and physical-device acceptance status are unchanged.
 - `./scripts/build-ios.sh all` builds and audits both iOS device and Simulator
   application bundles.
 - `./scripts/package-ios-ipa.sh` creates an audited unsigned ROM-free IPA under

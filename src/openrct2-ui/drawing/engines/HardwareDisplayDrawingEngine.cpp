@@ -9,7 +9,9 @@
 
 #include "DrawingEngineFactory.hpp"
 
-#include <SDL.h>
+#include <SDL_hints.h>
+#include <SDL_render.h>
+#include <SDL_version.h>
 #include <cmath>
 #include <cstring>
 #include <memory>

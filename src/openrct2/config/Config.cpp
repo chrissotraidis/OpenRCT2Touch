@@ -112,8 +112,8 @@ namespace OpenRCT2::Config
     });
 
     static const auto Enum_DrawingEngine = ConfigEnum<DrawingEngine>({
-        ConfigEnumEntry<DrawingEngine>("SOFTWARE_HWD", DrawingEngine::SoftwareWithHardwareDisplay),
-        ConfigEnumEntry<DrawingEngine>("OPENGL", DrawingEngine::OpenGL),
+        ConfigEnumEntry<DrawingEngine>("SOFTWARE_HWD", DrawingEngine::softwareWithHardwareDisplay),
+        ConfigEnumEntry<DrawingEngine>("OPENGL", DrawingEngine::openGL),
     });
 
     static const auto Enum_Temperature = ConfigEnum<TemperatureUnit>({
@@ -217,7 +217,7 @@ namespace OpenRCT2::Config
             model->windowWidth = reader->GetInt32("window_width", -1);
             model->defaultDisplay = reader->GetInt32("default_display", 0);
             model->drawingEngine = reader->GetEnum<DrawingEngine>(
-                "drawing_engine", DrawingEngine::SoftwareWithHardwareDisplay, Enum_DrawingEngine);
+                "drawing_engine", DrawingEngine::softwareWithHardwareDisplay, Enum_DrawingEngine);
             model->uncapFPS = reader->GetBoolean("uncap_fps", false);
             model->useVSync = reader->GetBoolean("use_vsync", true);
             model->virtualFloorStyle = reader->GetEnum<VirtualFloorStyles>(
@@ -236,7 +236,7 @@ namespace OpenRCT2::Config
 
             // Default config setting is false until the games canvas can be separated from the effect
             model->dayNightCycle = reader->GetBoolean("day_night_cycle", false);
-            const bool supportsLightFx = model->drawingEngine == DrawingEngine::SoftwareWithHardwareDisplay;
+            const bool supportsLightFx = model->drawingEngine == DrawingEngine::softwareWithHardwareDisplay;
             model->enableLightFx = supportsLightFx && reader->GetBoolean("enable_light_fx", false);
             model->enableLightFxForVehicles = supportsLightFx && reader->GetBoolean("enable_light_fx_for_vehicles", false);
             model->upperCaseBanners = reader->GetBoolean("upper_case_banners", false);
@@ -254,7 +254,7 @@ namespace OpenRCT2::Config
             model->autoOpenShops = reader->GetBoolean("auto_open_shops", false);
 
             // Gamepad settings
-            model->gamepadDeadzone = reader->GetInt32("gamepad_deadzone", 3600);
+            model->gamepadDeadzone = reader->GetInt32("gamepad_deadzone", 8192);
             model->gamepadSensitivity = reader->GetFloat("gamepad_sensitivity", 1.5f);
             model->scenarioUnlockingEnabled = reader->GetBoolean("scenario_unlocking_enabled", true);
             model->scenarioHideMegaPark = reader->GetBoolean("scenario_hide_mega_park", true);
@@ -727,6 +727,11 @@ namespace OpenRCT2::Config
      */
     static u8string FindRCT1Path()
     {
+#if defined(__APPLE__) && defined(__MACH__) && TARGET_OS_IOS
+        // iOS already validates and repairs this path during environment setup.
+        // RCT2 rediscovery must not replace it or repeat an optional file probe.
+        return Get().general.rct1Path;
+#else
         LOG_VERBOSE("config_find_rct1_path(...)");
 
         static std::vector<u8string> searchLocations = Platform::GetSearchablePathsRCT1();
@@ -766,6 +771,7 @@ namespace OpenRCT2::Config
             return exePath;
         }
         return {};
+#endif
     }
 
     static u8string FindRCT2SteamPath()
@@ -844,7 +850,7 @@ namespace OpenRCT2::Config
     static u8string SelectGogInstaller()
     {
         FileDialogDesc desc{};
-        desc.Type = FileDialogType::Open;
+        desc.Type = FileDialogType::open;
         desc.Title = LanguageGetString(STR_SELECT_GOG_INSTALLER);
         desc.Filters.emplace_back(LanguageGetString(STR_GOG_INSTALLER), "*.exe");
         desc.Filters.emplace_back(LanguageGetString(STR_ALL_FILES), "*");

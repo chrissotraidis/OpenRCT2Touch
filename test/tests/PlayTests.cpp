@@ -23,6 +23,7 @@
 #include <openrct2/actions/ride/RideSetPriceAction.h>
 #include <openrct2/actions/ride/RideSetStatusAction.h>
 #include <openrct2/drawing/Drawing.h>
+#include <openrct2/drawing/Palette.h>
 #include <openrct2/entity/EntityRegistry.h>
 #include <openrct2/entity/EntityTweener.h>
 #include <openrct2/entity/Peep.h>
@@ -57,11 +58,11 @@ static std::unique_ptr<IContext> localStartGame(const std::string& parkPath)
     auto& gameState = getGameState();
     importer->Import(gameState);
 
-    gameState.entities.ResetEntitySpatialIndices();
+    gameState.entities.resetEntitySpatialIndices();
 
     ResetAllSpriteQuadrantPlacements();
-    LoadPalette();
-    EntityTweener::Get().Reset();
+    Drawing::LoadPalette();
+    EntityTweener::get().reset();
     MapAnimations::MarkAllTiles();
     FixInvalidVehicleSpriteSizes();
 
@@ -116,7 +117,7 @@ TEST_F(PlayTests, SecondGuestInQueueShouldNotRideIfNoFunds)
     // Open park for free but charging for rides
     execute<GameActions::ParkSetParameterAction>(GameActions::ParkParameter::open);
     execute<GameActions::ParkSetEntranceFeeAction>(0);
-    gameState.park.flags |= PARK_FLAGS_UNLOCK_ALL_PRICES;
+    gameState.park.flags.set(ParkFlag::unlockAllPrices);
 
     // Find ferris wheel
     auto rideManager = RideManager(gameState);
@@ -137,7 +138,7 @@ TEST_F(PlayTests, SecondGuestInQueueShouldNotRideIfNoFunds)
     richGuest->cashInPocket = 3000;
 
     // Wait for rich guest to get in queue
-    bool matched = updateUntil(1000, [&]() { return richGuest->State == PeepState::queuing; });
+    bool matched = updateUntil(1000, [&]() { return richGuest->state == PeepState::queuing; });
     ASSERT_TRUE(matched);
 
     // Insert poor guest
@@ -145,7 +146,7 @@ TEST_F(PlayTests, SecondGuestInQueueShouldNotRideIfNoFunds)
     poorGuest->cashInPocket = 5;
 
     // Wait for poor guest to get in queue
-    matched = updateUntil(1000, [&]() { return poorGuest->State == PeepState::queuing; });
+    matched = updateUntil(1000, [&]() { return poorGuest->state == PeepState::queuing; });
     ASSERT_TRUE(matched);
 
     // Raise the price of the ride to a value poor guest can't pay
@@ -155,8 +156,8 @@ TEST_F(PlayTests, SecondGuestInQueueShouldNotRideIfNoFunds)
     // since it doesn't have enough money to pay for it
     bool enteredTheRide = false;
     matched = updateUntil(10000, [&]() {
-        enteredTheRide |= poorGuest->State == PeepState::onRide;
-        return poorGuest->State == PeepState::walking || enteredTheRide;
+        enteredTheRide |= poorGuest->state == PeepState::onRide;
+        return poorGuest->state == PeepState::walking || enteredTheRide;
     });
 
     ASSERT_TRUE(matched);
@@ -176,7 +177,7 @@ TEST_F(PlayTests, CarRideWithOneCarOnlyAcceptsTwoGuests)
     // Open park for free but charging for rides
     execute<GameActions::ParkSetParameterAction>(GameActions::ParkParameter::open);
     execute<GameActions::ParkSetEntranceFeeAction>(0);
-    gameState.park.flags |= PARK_FLAGS_UNLOCK_ALL_PRICES;
+    gameState.park.flags.set(ParkFlag::unlockAllPrices);
 
     // Find car ride
     auto rideManager = RideManager(gameState);
@@ -199,7 +200,7 @@ TEST_F(PlayTests, CarRideWithOneCarOnlyAcceptsTwoGuests)
     }
 
     // Wait until one of them is riding
-    auto guestIsOnRide = [](auto* g) { return g->State == PeepState::onRide; };
+    auto guestIsOnRide = [](auto* g) { return g->state == PeepState::onRide; };
     bool matched = updateUntil(10000, [&]() { return std::any_of(guests.begin(), guests.end(), guestIsOnRide); });
     ASSERT_TRUE(matched);
 

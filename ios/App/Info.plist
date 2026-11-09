@@ -9,7 +9,7 @@
     <key>CFBundleExecutable</key>
     <string>OpenRCT2Touch</string>
     <key>CFBundleIdentifier</key>
-    <string>com.chrissotraidis.openrct2touch</string>
+    <string>${MACOSX_BUNDLE_GUI_IDENTIFIER}</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleIcons</key>
