@@ -39,6 +39,7 @@ build_slice() {
         -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
         -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="$ROOT/ios/toolchain/ios.toolchain.cmake" \
         -DOPENRCT2_IOS_PLATFORM="$platform" \
+        -DOPENRCT2_IOS_BUNDLE_ID="$OPENRCT2_TOUCH_BUNDLE_ID" \
         -DCMAKE_OSX_ARCHITECTURES=arm64 \
         -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 \
         -DVCPKG_TARGET_TRIPLET="$triplet" \
