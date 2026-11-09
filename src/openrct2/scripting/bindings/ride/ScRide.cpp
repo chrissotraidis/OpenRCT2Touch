@@ -12,13 +12,12 @@
     #include "ScRide.hpp"
 
     #include "../../../Context.h"
-    #include "../../../core/EnumMap.hpp"
     #include "../../../core/UnitConversion.h"
     #include "../../../ride/Ride.h"
     #include "../../../ride/RideBreakdownMap.h"
     #include "../../../ride/RideData.h"
-    #include "../../ScriptEngine.h"
     #include "../object/ScObject.hpp"
+    #include "ScRideStation.hpp"
 
 namespace OpenRCT2::Scripting
 {
@@ -64,6 +63,7 @@ namespace OpenRCT2::Scripting
             JS_CGETSET_DEF("maxLiftHillSpeed", ScRide::maxLiftHillSpeed_get, nullptr),
             JS_CGETSET_DEF("minLiftHillSpeed", ScRide::minLiftHillSpeed_get, nullptr),
             JS_CGETSET_DEF("satisfaction", ScRide::satisfaction_get, nullptr),
+            JS_CGETSET_DEF("popularity", ScRide::popularity_get, nullptr),
             JS_CGETSET_DEF("maxSpeed", ScRide::maxSpeed_get, nullptr),
             JS_CGETSET_DEF("averageSpeed", ScRide::averageSpeed_get, nullptr),
             JS_CGETSET_DEF("rideTime", ScRide::rideTime_get, nullptr),
@@ -102,7 +102,7 @@ namespace OpenRCT2::Scripting
     Ride* ScRide::GetRide(JSValue thisVal)
     {
         RideData* data = GetRideData(thisVal);
-        return ::GetRide(data->_rideId);
+        return OpenRCT2::GetRide(data->_rideId);
     }
 
     JSValue ScRide::id_get(JSContext* ctx, JSValue thisVal)
@@ -733,7 +733,17 @@ namespace OpenRCT2::Scripting
     JSValue ScRide::satisfaction_get(JSContext* ctx, JSValue thisVal)
     {
         auto ride = GetRide(thisVal);
-        return JS_NewUint32(ctx, ride != nullptr ? ride->satisfaction * 5 : 0);
+        if (ride == nullptr || ride->satisfaction == 255)
+            return JS_NULL;
+        return JS_NewUint32(ctx, ride->satisfaction * 5);
+    }
+
+    JSValue ScRide::popularity_get(JSContext* ctx, JSValue thisVal)
+    {
+        auto ride = GetRide(thisVal);
+        if (ride == nullptr || ride->popularity == 255)
+            return JS_NULL;
+        return JS_NewUint32(ctx, ride->popularity * 4);
     }
 
     JSValue ScRide::maxSpeed_get(JSContext* ctx, JSValue thisVal)

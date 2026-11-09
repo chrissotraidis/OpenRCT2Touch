@@ -8,6 +8,7 @@
  *****************************************************************************/
 
 #include <openrct2-ui/interface/Widget.h>
+#include <openrct2-ui/interface/Window.h>
 #include <openrct2-ui/windows/Windows.h>
 #include <openrct2/Context.h>
 #include <openrct2/GameState.h>
@@ -112,7 +113,8 @@ namespace OpenRCT2::Ui::Windows
     {
     private:
         int32_t _pressedNewsItemIndex{}, _pressedButtonIndex{}, _suspendUpdateTicks{};
-        WidgetIndex _baseCheckboxIndex;
+        WidgetIndex _baseCheckboxIndex{};
+        News::Items& _queues;
 
         static int32_t CalculateNewsItemHeight()
         {
@@ -362,14 +364,13 @@ namespace OpenRCT2::Ui::Windows
 
             size_t j = _pressedNewsItemIndex;
             _pressedNewsItemIndex = -1;
-            auto& gameState = getGameState();
 
-            if (j >= gameState.newsItems.getArchived().size())
+            if (j >= _queues.archive.size())
             {
                 return;
             }
 
-            const auto& newsItem = gameState.newsItems.getArchived()[j];
+            const auto& newsItem = _queues.archive[j];
             if (newsItem.hasButton())
             {
                 return;
@@ -411,8 +412,7 @@ namespace OpenRCT2::Ui::Windows
 
         ScreenSize onScrollGetSize(int32_t scrollIndex) override
         {
-            int32_t scrollHeight = static_cast<int32_t>(getGameState().newsItems.getArchived().size())
-                    * CalculateNewsItemHeight()
+            int32_t scrollHeight = static_cast<int32_t>(_queues.archive.size()) * CalculateNewsItemHeight()
                 - kItemSeparatorHeight;
             return { kWindowSize.width, scrollHeight };
         }
@@ -423,7 +423,7 @@ namespace OpenRCT2::Ui::Windows
             int32_t i = 0;
             int32_t buttonIndex = 0;
             auto mutableScreenCoords = screenCoords;
-            for (const auto& newsItem : getGameState().newsItems.getArchived())
+            for (const auto& newsItem : _queues.archive)
             {
                 if (mutableScreenCoords.y < itemHeight)
                 {
@@ -470,7 +470,7 @@ namespace OpenRCT2::Ui::Windows
             const bool scrollbarVisible = scrolls[0].contentHeight > widgets[WIDX_SCROLL].height() - 1;
             const auto scrollbarFill = scrollbarVisible ? 0 : kScrollBarWidth;
 
-            for (const auto& newsItem : getGameState().newsItems.getArchived())
+            for (const auto& newsItem : _queues.archive)
             {
                 if (y >= rt.y + rt.height)
                     break;
@@ -500,7 +500,7 @@ namespace OpenRCT2::Ui::Windows
                     auto ft = Formatter();
                     ft.Add<const char*>(newsItem.text.c_str());
                     drawTextWrapped(
-                        rt, { 2, y + lineHeight }, 325, STR_BOTTOM_TOOLBAR_NEWS_TEXT, ft,
+                        rt, { 2, y + lineHeight }, 325, STR_NEWS_ITEM_TEXT, ft,
                         { Drawing::Colour::brightGreen, FontStyle::small });
                 }
                 // Subject button
@@ -509,9 +509,8 @@ namespace OpenRCT2::Ui::Windows
                     auto screenCoords = ScreenCoordsXY{ 328 + scrollbarFill, y + lineHeight + 4 };
 
                     auto borderStyle = Rectangle::BorderStyle::outset;
-                    if (_pressedNewsItemIndex != -1)
+                    if (_pressedNewsItemIndex != -1 && _pressedNewsItemIndex < static_cast<int32_t>(_queues.archive.size()))
                     {
-                        News::IsValidIndex(_pressedNewsItemIndex + News::ItemHistoryStart);
                         if (i == _pressedNewsItemIndex && _pressedButtonIndex == 1)
                         {
                             borderStyle = Rectangle::BorderStyle::inset;
@@ -534,7 +533,7 @@ namespace OpenRCT2::Ui::Windows
                                 break;
                             }
 
-                            auto peep = getGameState().entities.TryGetEntity<Peep>(EntityId::FromUnderlying(newsItem.assoc));
+                            auto peep = getGameState().entities.tryGetEntity<Peep>(EntityId::FromUnderlying(newsItem.assoc));
                             if (peep == nullptr)
                             {
                                 break;
@@ -547,7 +546,7 @@ namespace OpenRCT2::Ui::Windows
                             auto spriteType = PeepAnimationGroup::normal;
                             if (auto* staff = peep->as<Staff>(); staff != nullptr)
                             {
-                                spriteType = staff->AnimationGroup;
+                                spriteType = staff->animationGroup;
                                 if (staff->isEntertainer())
                                 {
                                     clipCoords.y += 3;
@@ -555,10 +554,10 @@ namespace OpenRCT2::Ui::Windows
                             }
 
                             auto& objManager = GetContext()->GetObjectManager();
-                            auto* animObj = objManager.GetLoadedObject<PeepAnimationsObject>(peep->AnimationObjectIndex);
+                            auto* animObj = objManager.GetLoadedObject<PeepAnimationsObject>(peep->animationObjectIndex);
 
                             ImageIndex imageId = animObj->GetPeepAnimation(spriteType).baseImage + 1;
-                            auto image = ImageId(imageId, peep->TshirtColour, peep->TrousersColour);
+                            auto image = ImageId(imageId, peep->tShirtColour, peep->trousersColour);
                             GfxDrawSprite(clippedRT, image, clipCoords);
                             break;
                         }
@@ -591,9 +590,8 @@ namespace OpenRCT2::Ui::Windows
                     auto screenCoords = ScreenCoordsXY{ 352 + scrollbarFill, y + lineHeight + 4 };
 
                     auto borderStyle = Rectangle::BorderStyle::outset;
-                    if (_pressedNewsItemIndex != -1)
+                    if (_pressedNewsItemIndex != -1 && _pressedNewsItemIndex < static_cast<int32_t>(_queues.archive.size()))
                     {
-                        News::IsValidIndex(_pressedNewsItemIndex + News::ItemHistoryStart);
                         if (i == _pressedNewsItemIndex && _pressedButtonIndex == 2)
                             borderStyle = Rectangle::BorderStyle::inset;
                     }
@@ -605,6 +603,11 @@ namespace OpenRCT2::Ui::Windows
                 y += itemHeight;
                 i++;
             }
+        }
+
+        NewsWindow()
+            : _queues(getGameState().park.newsItems)
+        {
         }
     };
 

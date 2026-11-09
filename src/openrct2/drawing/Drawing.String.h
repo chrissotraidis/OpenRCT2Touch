@@ -12,7 +12,7 @@
 #include "../core/FlagHolder.hpp"
 #include "../core/StringTypes.h"
 #include "../interface/ColourWithFlags.h"
-#include "../world/Location.hpp"
+#include "../interface/ScreenCoords.hpp"
 #include "TextColour.h"
 
 #include <cstdint>
@@ -47,6 +47,8 @@ namespace OpenRCT2::Drawing
         FontStyle fontStyle{};
         const int8_t* yOffset{};
     };
+
+    extern Drawing::Colour gCurrentWindowColours[3];
 
     void drawStringCentredRaw(
         RenderTarget& rt, const ScreenCoordsXY& coords, int32_t numLines, const utf8* text, FontStyle fontStyle);

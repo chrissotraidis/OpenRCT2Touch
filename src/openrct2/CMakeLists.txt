@@ -276,7 +276,9 @@ include_directories(libopenrct2 SYSTEM ${CMAKE_CURRENT_LIST_DIR}/../thirdparty)
 # To avoid unnecessary rebuilds set the current branch and
 # short sha1 only for the two files that use these
 # definitions: Version.cpp and Crash/Platform.cpp
-if (NOT OPENRCT2_VERSION_TAG STREQUAL "")
+# Touch release tags describe the port, not the engine. Let iOS use Version.h
+# for its engine version, even in a clone without upstream release tags.
+if (NOT OPENRCT2_IOS AND NOT OPENRCT2_VERSION_TAG STREQUAL "")
     set_property(SOURCE ${CMAKE_CURRENT_LIST_DIR}/Version.cpp ${CMAKE_CURRENT_LIST_DIR}/Crash/Platform.cpp
             PROPERTY COMPILE_DEFINITIONS
             OPENRCT2_VERSION_TAG="${OPENRCT2_VERSION_TAG}")

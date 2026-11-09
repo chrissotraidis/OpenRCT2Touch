@@ -14,8 +14,6 @@
 
 #include <cstdint>
 
-struct Ride;
-
 namespace OpenRCT2::Drawing
 {
     enum class Colour : uint8_t;
@@ -24,11 +22,11 @@ namespace OpenRCT2::Drawing
 namespace OpenRCT2
 {
     class DataSerialiser;
+    class PatrolArea;
 
+    struct Ride;
     struct TileElement;
     struct PathElement;
-
-    class PatrolArea;
 
     enum class StaffType : uint8_t
     {
@@ -42,7 +40,7 @@ namespace OpenRCT2
 
     struct Staff : Peep
     {
-        static constexpr auto cEntityType = EntityType::staff;
+        static constexpr auto kEntityType = EntityType::staff;
 
     public:
         PatrolArea* patrolInfo;
@@ -73,7 +71,7 @@ namespace OpenRCT2
             uint32_t staffBinsEmptied;
         };
 
-        void Update();
+        void update();
         void tick128UpdateStaff();
         bool isMechanic() const;
         bool isEntertainer() const;

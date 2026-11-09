@@ -16,7 +16,7 @@
 #endif
 
 #define OPENRCT2_NAME "OpenRCT2"
-#define kOpenRCT2Version "0.5.3"
+#define kOpenRCT2Version "0.5.7"
 
 #if defined(__amd64__) || defined(_M_AMD64)
     #define OPENRCT2_ARCHITECTURE "x86-64"

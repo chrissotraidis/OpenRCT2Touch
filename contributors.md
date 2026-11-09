@@ -130,6 +130,9 @@ Appreciation for contributors who have provided substantial work, but are no lon
 * Kendall Frey (kendfrey) - Add plugin API for spawning guests
 * Marino Rottier (rinode) - Plugin API & UI
 * Ben Spurlock (BenDaSpur) - Plugin API automation helpers
+* (frozensnowy) - Draggable path slopes, self-intersecting track designs, refactors, bug fixes, misc.
+* Arjan van Dijk (Manticore-007) - Added guests entertained to API.
+* Mark Alliban (MarkAlliban) - Added plugin API fields.
 
 ## Bug fixes & Refactors
 * Claudio Tiecher (janclod)
@@ -265,6 +268,12 @@ Appreciation for contributors who have provided substantial work, but are no lon
 * Alex Harvey (loonyduck1)
 * Daniel Rödl (danielroedl)
 * Michael Hlas (mhlas7)
+* (byteraidhost)
+* Ray (RayKoopa)
+* (itu-itis24-iyigun24)
+* James Cranston (jcranston)
+* Yoshi Tacke (YoshKoz)
+* (GhostCoder6969)
 
 ## Toolchain
 * (Balletie) - macOS

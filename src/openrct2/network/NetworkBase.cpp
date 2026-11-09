@@ -24,7 +24,7 @@
 #include "../core/File.h"
 #include "../core/Guard.hpp"
 #include "../core/Json.hpp"
-#include "../drawing/Drawing.h"
+#include "../drawing/Drawing.Screen.h"
 #include "../entity/EntityRegistry.h"
 #include "../entity/EntityTweener.h"
 #include "../localisation/Formatter.h"
@@ -47,7 +47,7 @@
 // It is used for making sure only compatible builds get connected, even within
 // single OpenRCT2 version.
 
-constexpr uint8_t kStreamVersion = 3;
+constexpr uint8_t kStreamVersion = 0;
 
 const std::string kStreamID = std::string(kOpenRCT2Version) + "-" + std::to_string(kStreamVersion);
 
@@ -73,7 +73,6 @@ static constexpr uint32_t kMaxPacketsPerTick = 100;
     #include "../core/MemoryStream.h"
     #include "../core/Path.hpp"
     #include "../core/String.hpp"
-    #include "../interface/Chat.h"
     #include "../object/ObjectManager.h"
     #include "../object/ObjectRepository.h"
     #include "../scenario/Scenario.h"
@@ -103,6 +102,15 @@ namespace OpenRCT2::Network
     static u8string GetKeysDirectory();
     static u8string GetPrivateKeyPath(u8string_view playerName);
     static u8string GetPublicKeyPath(u8string_view playerName, u8string_view hash);
+
+    static void ChatAddHistory(const u8string& text)
+    {
+        AppendChatLog(text);
+
+        auto intent = Intent(INTENT_ACTION_CHAT_ADD_HISTORY);
+        intent.PutExtra(INTENT_EXTRA_MESSAGE, text);
+        ContextBroadcastIntent(&intent);
+    }
 
     NetworkBase::NetworkBase(IContext& context)
         : System(context)
@@ -204,7 +212,7 @@ namespace OpenRCT2::Network
             scriptEngine.RemoveNetworkPlugins();
     #endif
 
-            GfxInvalidateScreen();
+            Drawing::GfxInvalidateScreen();
 
             _requireClose = false;
         }
@@ -856,8 +864,8 @@ namespace OpenRCT2::Network
 
         if (!storedTick.spriteHash.empty())
         {
-            EntitiesChecksum checksum = getGameState().entities.GetAllEntitiesChecksum();
-            std::string clientSpriteHash = checksum.ToString();
+            EntitiesChecksum checksum = getGameState().entities.getAllEntitiesChecksum();
+            std::string clientSpriteHash = checksum.toString();
             if (clientSpriteHash != storedTick.spriteHash)
             {
                 LOG_INFO(
@@ -1321,7 +1329,7 @@ namespace OpenRCT2::Network
         {
             std::string name(object.GetName());
             LOG_VERBOSE("client requests object %s", name.c_str());
-            if (object.Generation == ObjectGeneration::DAT)
+            if (object.Generation == ObjectGeneration::dat)
             {
                 packet << static_cast<uint8_t>(0);
                 packet.write(&object.Entry, sizeof(RCTObjectEntry));
@@ -1601,8 +1609,8 @@ namespace OpenRCT2::Network
         packet << flags;
         if (flags & TickFlags::kChecksums)
         {
-            EntitiesChecksum checksum = getGameState().entities.GetAllEntitiesChecksum();
-            packet.writeString(checksum.ToString());
+            EntitiesChecksum checksum = getGameState().entities.getAllEntitiesChecksum();
+            packet.writeString(checksum.toString());
         }
 
         SendPacketToClients(packet);
@@ -2633,7 +2641,7 @@ namespace OpenRCT2::Network
 
             std::string objectName;
             const ObjectRepositoryItem* item{};
-            if (generation == static_cast<uint8_t>(ObjectGeneration::DAT))
+            if (generation == static_cast<uint8_t>(ObjectGeneration::dat))
             {
                 const auto* entry = reinterpret_cast<const RCTObjectEntry*>(packet.read(sizeof(RCTObjectEntry)));
                 if (entry == nullptr)
@@ -2881,7 +2889,7 @@ namespace OpenRCT2::Network
             auto& gameState = getGameState();
             importer->Import(gameState);
 
-            EntityTweener::Get().Reset();
+            EntityTweener::get().reset();
             MapAnimations::MarkAllTiles();
 
             gLastAutoSaveUpdate = kAutosavePause;
@@ -3039,12 +3047,12 @@ namespace OpenRCT2::Network
         packet >> tick >> actionType;
 
         // Don't let clients send pause or quit
-        if (actionType == GameCommand::TogglePause || actionType == GameCommand::LoadOrQuit)
+        if (actionType == GameCommand::togglePause || actionType == GameCommand::loadOrQuit)
         {
             return;
         }
 
-        if (actionType != GameCommand::Custom)
+        if (actionType != GameCommand::custom)
         {
             // Check if player's group permission allows command to run
             NetworkGroup* group = GetGroupByID(connection.player->group);
@@ -3087,8 +3095,8 @@ namespace OpenRCT2::Network
 
         DataSerialiser stream(false);
         const size_t size = packet.header.size - packet.bytesRead;
-        stream.GetStream().WriteArray(packet.read(size), size);
-        stream.GetStream().SetPosition(0);
+        stream.getStream().WriteArray(packet.read(size), size);
+        stream.getStream().SetPosition(0);
 
         ga->Serialise(stream);
         // Set player to sender, should be 0 if sent from client.

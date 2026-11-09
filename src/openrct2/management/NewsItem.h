@@ -25,7 +25,11 @@ struct CoordsXYZ;
 namespace OpenRCT2
 {
     class Formatter;
-    struct GameState_t;
+
+    namespace Park
+    {
+        struct ParkData;
+    }
 } // namespace OpenRCT2
 
 namespace OpenRCT2::News
@@ -46,7 +50,7 @@ namespace OpenRCT2::News
         count
     };
 
-    constexpr size_t ItemTypeCount = static_cast<size_t>(ItemType::count);
+    constexpr size_t kItemTypeCount = static_cast<size_t>(ItemType::count);
 
     enum ItemTypeProperty : uint8_t
     {
@@ -122,12 +126,11 @@ namespace OpenRCT2::News
         }
     };
 
-    constexpr int32_t ItemHistoryStart = 11;
-    constexpr int32_t MaxItemsArchive = 50;
-    constexpr int32_t MaxItems = ItemHistoryStart + MaxItemsArchive;
+    constexpr int32_t kNewsQueueSize = 11;
+    constexpr int32_t kNewsArchiveSize = 50;
 
     template<std::size_t N>
-    class ItemQueue
+    class ItemCollection
     {
     public:
         static_assert(N > 0, "Cannot instantiate News::ItemQueue with size=0");
@@ -144,7 +147,7 @@ namespace OpenRCT2::News
         using reverse_iterator = std::reverse_iterator<iterator>;
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-        ItemQueue()
+        ItemCollection()
         {
             std::get<0>(_queue).type = ItemType::null;
         }
@@ -244,83 +247,75 @@ namespace OpenRCT2::News
             std::fill(_queue.begin(), _queue.end(), Item{});
         }
 
+        const_pointer at(int32_t index) const
+        {
+            if (_queue[index].type == ItemType::null)
+                return nullptr;
+
+            return &_queue[index];
+        }
+
+        void remove(int32_t index)
+        {
+            // News item is already null, no need to remove it
+            if (_queue[index].type == ItemType::null)
+                return;
+
+            for (size_t i = index; i < N - 1; i++)
+            {
+                _queue[i] = _queue[i + 1];
+            }
+            _queue[N - 1].type = ItemType::null;
+        }
+
+        void importQueue(const std::span<const value_type> src)
+        {
+            clear();
+
+            for (size_t i = 0; i < std::min<size_t>(src.size(), N); i++)
+            {
+                _queue[i] = src[i];
+            }
+        }
+
     private:
         std::array<Item, N> _queue;
     };
 
-    struct ItemQueues
+    using NewsArchive = ItemCollection<kNewsArchiveSize>;
+    using NewsQueue = ItemCollection<kNewsQueueSize>;
+
+    struct Items
     {
-        Item& operator[](size_t index);
-        const Item& operator[](size_t index) const;
-        Item* at(int32_t index);
-        const Item* at(int32_t index) const;
-        bool isEmpty() const;
+        NewsQueue queue;
+        NewsArchive archive;
+
         void clear();
-        uint16_t incrementTicks();
-        Item& current();
-        const Item& current() const;
-        bool currentShouldBeArchived() const;
-        void archiveCurrent();
-        Item* firstOpenOrNewSlot();
-        const auto& getRecent() const
-        {
-            return _recent;
-        }
-        const auto& getArchived() const
-        {
-            return _archived;
-        }
 
-        template<typename Predicate>
-        void foreachRecentNews(Predicate&& p)
-        {
-            for (auto& newsItem : _recent)
-            {
-                p(newsItem);
-            }
-        }
+        void updateActiveItem();
+        void archiveActiveItem();
 
-        template<typename Predicate>
-        void foreachArchivedNews(Predicate&& p)
-        {
-            for (auto& newsItem : _archived)
-            {
-                p(newsItem);
-            }
-        }
+        const Item* getActiveMessage() const;
+
+        Item* addItemToQueue(ItemType type, StringId string_id, uint32_t assoc, const Formatter& formatter);
+        Item* addItemToQueue(ItemType type, StringId string_id, EntityId assoc, const Formatter& formatter);
+        Item* addItemToQueue(ItemType type, const utf8* text, uint32_t assoc);
 
     private:
+        Item* firstOpenOrNewSlot();
         int32_t removeTime() const;
 
-        ItemQueue<ItemHistoryStart> _recent;
-        ItemQueue<MaxItemsArchive> _archived;
+        bool activeItemShouldBeArchived() const;
+        void tickActiveItem();
     };
 
-    void InitQueue(GameState_t& gameState);
-
-    void UpdateCurrentItem();
-    void CloseCurrentItem();
+    void InitQueue(Park::ParkData& park);
 
     std::optional<CoordsXYZ> GetSubjectLocation(ItemType type, int32_t subject);
-
-    Item* AddItemToQueue(ItemType type, StringId string_id, uint32_t assoc, const Formatter& formatter);
-    Item* AddItemToQueue(ItemType type, StringId string_id, EntityId assoc, const Formatter& formatter);
-    Item* AddItemToQueue(ItemType type, const utf8* text, uint32_t assoc);
 
     bool CheckIfItemRequiresAssoc(ItemType type);
 
     void OpenSubject(ItemType type, int32_t subject);
 
-    void DisableNewsItems(ItemType type, uint32_t assoc);
-
-    Item* GetItem(int32_t index);
-
-    bool IsQueueEmpty();
-
-    bool IsValidIndex(int32_t index);
-
-    void AddItemToQueue(Item* newNewsItem);
-    void RemoveItem(int32_t index);
-
-    void importNewsItems(GameState_t& gameState, std::span<const Item> recent, std::span<const Item> archived);
+    void DisableNewsItems(Items& newsItems, ItemType type, uint32_t assoc);
 } // namespace OpenRCT2::News

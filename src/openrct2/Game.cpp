@@ -28,14 +28,14 @@
 #include "core/FileSystem.hpp"
 #include "core/Path.hpp"
 #include "core/String.hpp"
-#include "drawing/Drawing.h"
+#include "drawing/Palette.h"
 #include "drawing/ScrollingText.h"
 #include "entity/EntityList.h"
 #include "entity/EntityRegistry.h"
 #include "entity/PatrolArea.h"
 #include "entity/Peep.h"
 #include "interface/Viewport.h"
-#include "interface/Window.h"
+#include "interface/WindowTypes.h"
 #include "management/Research.h"
 #include "network/Network.h"
 #include "platform/Platform.h"
@@ -55,14 +55,14 @@
 
 #include <memory>
 
+using namespace OpenRCT2;
+
 #ifdef __EMSCRIPTEN__
 extern "C" {
 extern void EmscriptenSaveGame(bool isTrackDesign, bool isAutosave, LoadSaveType type);
 extern void EmscriptenResetAutosave();
 }
 #endif
-
-using namespace OpenRCT2;
 
 uint16_t gCurrentDeltaTime;
 uint8_t gGamePaused = 0;
@@ -119,7 +119,9 @@ void GameCreateWindows()
 {
     ContextOpenWindow(WindowClass::mainWindow);
     ContextOpenWindow(WindowClass::topToolbar);
-    ContextOpenWindow(WindowClass::bottomToolbar);
+    ContextOpenWindow(WindowClass::gameStatusBar);
+    ContextOpenWindow(WindowClass::parkInfoPanel);
+    ContextOpenWindow(WindowClass::dateInfoPanel);
     WindowResizeGui(ContextGetWidth(), ContextGetHeight());
 }
 
@@ -173,7 +175,7 @@ static void FixGuestsHeadingToParkCount()
 
     for (auto* peep : EntityList<Guest>())
     {
-        if (peep->outsideOfPark && peep->State != PeepState::leavingPark)
+        if (peep->outsideOfPark && peep->state != PeepState::leavingPark)
         {
             guestsHeadingToPark++;
         }
@@ -219,10 +221,10 @@ static void FixPeepsWithInvalidRideReference()
     // Fix possibly invalid field values
     for (auto peep : EntityList<Guest>())
     {
-        if (peep->CurrentRideStation.ToUnderlying() >= Limits::kMaxStationsPerRide)
+        if (peep->currentRideStation.ToUnderlying() >= Limits::kMaxStationsPerRide)
         {
-            const auto srcStation = peep->CurrentRideStation;
-            const auto rideIdx = peep->CurrentRide;
+            const auto srcStation = peep->currentRideStation;
+            const auto rideIdx = peep->currentRide;
             if (rideIdx.IsNull())
             {
                 continue;
@@ -231,10 +233,10 @@ static void FixPeepsWithInvalidRideReference()
             if (ride == nullptr)
             {
                 LOG_WARNING("Couldn't find ride %u, resetting ride on peep %u", rideIdx, peep->id);
-                peep->CurrentRide = RideId::GetNull();
+                peep->currentRide = RideId::GetNull();
                 continue;
             }
-            auto curName = peep->GetName();
+            auto curName = peep->getName();
             LOG_WARNING(
                 "Peep %u (%s) has invalid ride station = %u for ride %u.", peep->id, curName.c_str(), srcStation.ToUnderlying(),
                 rideIdx);
@@ -247,7 +249,7 @@ static void FixPeepsWithInvalidRideReference()
             else
             {
                 LOG_WARNING("Amending ride station to %u.", station);
-                peep->CurrentRideStation = station;
+                peep->currentRideStation = station;
             }
         }
     }
@@ -255,12 +257,12 @@ static void FixPeepsWithInvalidRideReference()
     if (!peepsToRemove.empty())
     {
         // Some broken saves have broken spatial indexes
-        getGameState().entities.ResetEntitySpatialIndices();
+        getGameState().entities.resetEntitySpatialIndices();
     }
 
     for (auto ptr : peepsToRemove)
     {
-        ptr->Remove();
+        ptr->remove();
     }
 }
 
@@ -278,7 +280,7 @@ static void FixInvalidSurfaces()
             if (surfaceElement == nullptr)
             {
                 LOG_ERROR("Null map element at x = %d and y = %d. Fixing...", x, y);
-                surfaceElement = TileElementInsert<SurfaceElement>(TileCoordsXYZ{ x, y, 14 }.ToCoordsXYZ(), 0b0000);
+                surfaceElement = TileElementInsert<SurfaceElement>(TileCoordsXYZ{ x, y, 14 }.toCoordsXYZ(), 0b0000);
                 if (surfaceElement == nullptr)
                 {
                     LOG_ERROR("Unable to fix: Map element limit reached.");
@@ -293,8 +295,8 @@ static void FixInvalidSurfaces()
             {
                 surfaceElement->setBaseZ(kMinimumLandZ);
                 surfaceElement->setClearanceZ(kMinimumLandZ);
-                surfaceElement->SetSlope(0);
-                surfaceElement->SetWaterHeight(0);
+                surfaceElement->setSlope(0);
+                surfaceElement->setWaterHeight(0);
             }
         }
     }
@@ -347,6 +349,7 @@ void GameLoadInit()
     // being displayed due to pointer value reuse in the cache matching logic
     Drawing::ScrollingText::invalidate();
 
+    // TODO: move relevant UI calls to UI subproject
     if (!gLoadKeepWindowsOpen)
     {
         ContextResetSubsystems();
@@ -366,13 +369,13 @@ void GameLoadInit()
     {
         GameActions::ClearQueue();
     }
-    getGameState().entities.ResetEntitySpatialIndices();
+    getGameState().entities.resetEntitySpatialIndices();
     ResetAllSpriteQuadrantPlacements();
 
     gWindowUpdateTicks = 0;
     gCurrentRealTimeTicks = 0;
 
-    LoadPalette();
+    Drawing::LoadPalette();
 
     if (!gOpenRCT2Headless)
     {
@@ -435,7 +438,7 @@ void ResetAllSpriteQuadrantPlacements()
 {
     for (EntityId::UnderlyingType i = 0; i < kMaxEntities; i++)
     {
-        auto* spr = getGameState().entities.GetEntity(EntityId::FromUnderlying(i));
+        auto* spr = getGameState().entities.getEntity(EntityId::FromUnderlying(i));
         if (spr != nullptr && spr->type != EntityType::null)
         {
             spr->moveTo(spr->getLocation());
@@ -497,7 +500,9 @@ void SaveGameWithName(u8string_view name)
     LOG_VERBOSE("Saving to %s", u8string(name).c_str());
 
     auto& gameState = getGameState();
-    if (ScenarioSave(gameState, name, Config::Get().general.savePluginData ? 1 : 0))
+    SaveFlags saveFlags{};
+    saveFlags.set(SaveFlag::exportObjects, Config::Get().general.savePluginData);
+    if (ScenarioSave(gameState, name, saveFlags))
     {
         LOG_VERBOSE("Saved to %s", u8string(name).c_str());
         gCurrentLoadedPath = name;
@@ -546,8 +551,8 @@ static void LimitAutosaveCount(const size_t numberOfFilesToKeep, bool processLan
 
     // At first, count how many autosaves there are
     {
-        auto scanner = Path::ScanDirectory(filter, false);
-        while (scanner->Next())
+        auto scanner = Path::scanDirectory(filter, false);
+        while (scanner->next())
         {
             autosavesCount++;
         }
@@ -561,12 +566,12 @@ static void LimitAutosaveCount(const size_t numberOfFilesToKeep, bool processLan
 
     std::vector<u8string> autosaveFiles;
     {
-        auto scanner = Path::ScanDirectory(filter, false);
+        auto scanner = Path::scanDirectory(filter, false);
         for (size_t i = 0; i < autosavesCount; i++)
         {
-            if (scanner->Next())
+            if (scanner->next())
             {
-                autosaveFiles.emplace_back(Path::Combine(folderDirectory, "autosave", scanner->GetPathRelative()));
+                autosaveFiles.emplace_back(Path::Combine(folderDirectory, "autosave", scanner->getPathRelative()));
             }
         }
     }
@@ -591,12 +596,12 @@ void GameAutosave()
 {
     auto subDirectory = DirId::saves;
     const char* fileExtension = ".park";
-    uint32_t saveFlags = 0x80000000;
+    SaveFlags saveFlags = { SaveFlag::automatic };
     if (isInEditorMode())
     {
         subDirectory = DirId::landscapes;
         fileExtension = ".park";
-        saveFlags |= 2;
+        saveFlags.set(SaveFlag::scenario);
     }
 
     // Retrieve current time
@@ -734,7 +739,7 @@ void GameLoadOrQuitNoSavePrompt()
         }
         default:
             GameUnloadScripts();
-            getGameState().entities.ResetAllEntities();
+            getGameState().entities.resetAllEntities();
             GetContext()->Finish();
             break;
     }
@@ -745,7 +750,7 @@ void StartSilentRecord()
     std::string name = Path::Combine(
         GetContext()->GetPlatformEnvironment().GetDirectoryPath(DirBase::user), u8"debug_replay.parkrep");
     auto* replayManager = GetContext()->GetReplayManager();
-    if (replayManager->StartRecording(name, k_MaxReplayTicks, IReplayManager::RecordType::SILENT))
+    if (replayManager->StartRecording(name, k_MaxReplayTicks, IReplayManager::RecordType::silent))
     {
         ReplayRecordInfo info;
         replayManager->GetCurrentReplayInfo(info);

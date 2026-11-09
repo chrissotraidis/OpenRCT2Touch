@@ -19,7 +19,7 @@
 #include "../drawing/IDrawingEngine.h"
 #include "../drawing/Text.h"
 #include "../interface/ColourWithFlags.h"
-#include "../interface/Window.h"
+#include "../interface/WindowTypes.h"
 #include "../localisation/Formatting.h"
 #include "../localisation/LocalisationService.h"
 #include "../platform/Platform.h"
@@ -30,6 +30,9 @@
 namespace OpenRCT2::Drawing
 {
     static TextColours _savedTextPalette{};
+
+    Drawing::Colour gCurrentWindowColours[3];
+
     /**
      *
      *  rct2: 0x006C23B1
@@ -585,7 +588,7 @@ namespace OpenRCT2::Drawing
     }
 
 #ifndef DISABLE_TTF
-    static bool shouldUseSpriteForCodepoint(char32_t codepoint)
+    static bool shouldUseSpriteForCodepoint(UnicodeChar codepoint)
     {
         switch (codepoint)
         {
@@ -593,18 +596,19 @@ namespace OpenRCT2::Drawing
             case UnicodeChar::down:
             case UnicodeChar::leftguillemet:
             case UnicodeChar::tick:
+            case UnicodeChar::dingbatMultiply:
             case UnicodeChar::cross:
             case UnicodeChar::right:
             case UnicodeChar::rightguillemet:
-            case UnicodeChar::small_up:
-            case UnicodeChar::small_down:
+            case UnicodeChar::smallUp:
+            case UnicodeChar::smallDown:
             case UnicodeChar::left:
-            case UnicodeChar::quote_open:
-            case UnicodeChar::quote_close:
-            case UnicodeChar::german_quote_open:
+            case UnicodeChar::quoteOpen:
+            case UnicodeChar::quoteClose:
+            case UnicodeChar::germanQuoteOpen:
             case UnicodeChar::plus:
             case UnicodeChar::minus:
-            case UnicodeChar::variation_selector:
+            case UnicodeChar::variationSelector:
             case UnicodeChar::eye:
             case UnicodeChar::road:
             case UnicodeChar::railway:
@@ -635,7 +639,7 @@ namespace OpenRCT2::Drawing
             for (auto it = codepoints.begin(); it != codepoints.end(); it++)
             {
                 auto codepoint = *it;
-                if (shouldUseSpriteForCodepoint(codepoint))
+                if (shouldUseSpriteForCodepoint(static_cast<UnicodeChar>(codepoint)))
                 {
                     if (ttfRunIndex.has_value())
                     {

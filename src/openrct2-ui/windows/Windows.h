@@ -9,32 +9,44 @@
 
 #pragma once
 
+#include <functional>
 #include <openrct2/Identifiers.h>
-#include <openrct2/interface/Window.h>
+#include <openrct2/core/StringTypes.h>
+#include <openrct2/interface/WindowTypes.h>
+#include <openrct2/localisation/StringIdType.h>
 #include <openrct2/world/ScenerySelection.h>
 #include <optional>
 #include <string_view>
 
+struct ScreenCoordsXY;
 struct StringWithArgs;
-struct Ride;
 struct RideSelection;
 struct TrackDesign;
 struct TrackDesignFileRef;
-struct Vehicle;
 
-enum class GuestListFilterType : int32_t;
 enum class ScatterToolDensity : uint8_t;
-
-using LoadSaveCallback = void (*)(ModalResult result, const utf8* path);
-using ScenarioSelectCallback = void (*)(const utf8* path);
 
 namespace OpenRCT2
 {
+    enum class GuestListFilterType : int32_t;
+
     class Formatter;
     struct ObjectEntryDescriptor;
     struct Peep;
+    struct Ride;
     struct TileElement;
+    struct Vehicle;
+
+    using LoadSaveCallback = void (*)(ModalResult result, const utf8* path);
+    using ScenarioSelectCallback = void (*)(const utf8* path);
 } // namespace OpenRCT2
+
+namespace OpenRCT2::Drawing
+{
+    enum class Colour : uint8_t;
+
+    struct RenderTarget;
+} // namespace OpenRCT2::Drawing
 
 namespace OpenRCT2::Ui::Windows
 {
@@ -69,6 +81,9 @@ namespace OpenRCT2::Ui::Windows
     // CustomCurrency
     WindowBase* CustomCurrencyOpen();
 
+    // DateInfoPanel
+    WindowBase* dateInfoPanelOpen();
+
     // DebugPaint
     WindowBase* DebugPaintOpen();
 
@@ -77,9 +92,6 @@ namespace OpenRCT2::Ui::Windows
 
     // EditorInventionsList
     WindowBase* EditorInventionsListOpen();
-
-    // EditorBottomToolbar
-    WindowBase* EditorBottomToolbarOpen();
 
     // EditorObjectSelection
     WindowBase* EditorObjectSelectionOpen();
@@ -91,6 +103,12 @@ namespace OpenRCT2::Ui::Windows
 
     // EditorScenarioOptions
     WindowBase* EditorScenarioOptionsOpen();
+
+    // EditorStatusLine
+    WindowBase* editorStatusLineOpen();
+
+    // EditorStepController
+    WindowBase* editorStepControllerOpen();
 
     // Error
     WindowBase* ErrorOpen(StringId title, StringId message, const class Formatter& formatter, bool autoClose = false);
@@ -113,10 +131,8 @@ namespace OpenRCT2::Ui::Windows
     void WindowFootpathKeyboardShortcutDemolishCurrent();
     bool WindowFootpathSelectDefault();
 
-    // GameBottomToolbar
-    extern uint8_t gToolbarDirtyFlags;
-    WindowBase* GameBottomToolbarOpen();
-    void WindowGameBottomToolbarInvalidateNewsItem();
+    // GameStatusBar
+    WindowBase* gameStatusBarOpen();
 
     // Guest
     WindowBase* GuestOpen(Peep* peep);
@@ -178,6 +194,10 @@ namespace OpenRCT2::Ui::Windows
     // News
     WindowBase* NewsOpen();
 
+    // NewsTicker
+    WindowBase* newsTickerOpen();
+    void newsTickerInvalidateNewsItem();
+
     // NetworkStatus
     WindowBase* NetworkStatusOpen(const std::string& text, CloseCallback onClose);
     WindowBase* NetworkStatusOpenPassword();
@@ -200,6 +220,9 @@ namespace OpenRCT2::Ui::Windows
     WindowBase* ParkGuestsOpen();
     WindowBase* ParkObjectiveOpen();
     WindowBase* ParkRatingOpen();
+
+    // ParkInfoPanel
+    WindowBase* parkInfoPanelOpen();
 
     // Player
     WindowBase* PlayerOpen(uint8_t id);

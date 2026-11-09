@@ -9,10 +9,15 @@
 
 #pragma once
 
+#include "../interface/WindowClasses.h"
+#include "../interface/WindowFlags.h"
+#include "../interface/ZoomLevel.h"
 #include "../localisation/StringWithArgs.h"
+#include "../world/Location.hpp"
 #include "ColourWithFlags.h"
 #include "Cursors.h"
 #include "ScrollArea.h"
+#include "Widget.h"
 #include "Window.h"
 
 #include <memory>
