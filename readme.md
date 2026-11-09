@@ -174,7 +174,8 @@ with a web browser: follow [PadMint's steps](https://github.com/chrissotraidis/p
 
 ### Requirements
 
-- An Apple Silicon Mac.
+- An Apple Silicon Mac, or an Intel Mac using the experimental source-build
+  steps below. PadMint's Mac route remains Apple Silicon only.
 - Full Xcode with an iOS SDK and command-line tools installed.
 - CMake 3.24 or newer, Ninja, pkg-config, and Git.
 - An iPad running iPadOS 15 or newer, connected by USB, unlocked, trusted, and
@@ -226,6 +227,27 @@ For an optional Simulator build, use:
 ./scripts/run-ios-sim.sh verify
 ```
 
+### Intel Mac source builds (experimental)
+
+The host macOS build selects the architecture reported by `uname -m`; the
+device app remains ARM64. An Intel Mac build and physical-iPad play were
+[reported by a contributor](https://github.com/chrissotraidis/OpenRCT2Touch/issues/16).
+The Simulator scripts currently target ARM64 and require Apple Silicon.
+
+If Homebrew headers under `/usr/local` cause OpenSSL or Vorbis compilation
+errors, prepare the engine assets with the same optional features disabled as
+the iOS app. Use a fresh macOS build directory to avoid an old ARM64 CMake
+cache, and keep this environment in the same terminal for the later iOS build:
+
+```sh
+export MACOS_BUILD_DIR="$PWD/build/macos-intel"
+./scripts/build-macos.sh -DDISABLE_NETWORK=ON -DDISABLE_HTTP=ON \
+    -DDISABLE_DISCORD_RPC=ON -DDISABLE_VORBIS=ON -DDISABLE_FLAC=ON
+```
+
+Those options stay in that build directory's CMake cache when the iOS scripts
+generate engine assets again. Continue with the device signing steps below.
+
 ### Optional: create a local unsigned IPA
 
 After building the device app, this command creates an audited, ROM-free IPA
@@ -262,6 +284,19 @@ only as environment variables; the scripts never save them in the repository.
 
 ### 4. Sign, install, and launch
 
+If your development team needs its own bundle identifier, set it once in the
+terminal before building and installing:
+
+```sh
+export OPENRCT2_TOUCH_BUNDLE_ID=com.yourname.openrct2touch
+```
+
+Use an identifier available to your team and keep the same value for build,
+verification, and install commands. Both the Xcode and Ninja builds use it;
+no source-file edits are needed. The default is
+`com.chrissotraidis.openrct2touch`. Changing the identifier creates a separate
+app sandbox, so existing saves and imported data are not moved automatically.
+
 ```sh
 OPENRCT2_DEVELOPMENT_TEAM=<team-identifier> \
 OPENRCT2_DEVICE_UDID=<device-identifier> \
@@ -296,6 +331,20 @@ If validation fails, check that you selected the installation root and that
 identifier preserves the sandbox. The July 2026 change from the old
 `org.openrct2.touch` identifier to `com.chrissotraidis.openrct2touch` creates a
 new sandbox, so existing development testers must import once after updating.
+
+### Optional RCT1 content
+
+RCT2 or RCT Classic data is still required. To add content from your own RCT1
+installation with its expansion packs, create an `rct1` folder under
+**On My iPad → OpenRCT2 Touch** in Files, then copy the installation's `Data`,
+`Scenarios`, and `Tracks` folders into it. The layout should be
+`rct1/Data/CSG1.DAT` (or `CSG1.1`) and `rct1/Data/CSG1I.DAT`, with the other
+folders alongside `Data`.
+
+Relaunch the app to discover and validate the folder. It also repairs a stale
+saved container path when valid data is still present in `Documents/rct1`.
+The native import picker currently handles RCT2/RCT Classic only; RCT1 uses
+this manual Files copy. RCT1 data is never part of the app build or bundle.
 
 ### Troubleshooting
 

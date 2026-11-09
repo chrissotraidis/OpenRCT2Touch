@@ -45,6 +45,11 @@ iOS bundle configuration. iPad remains the primary tested platform and the MVP
 acceptance target; iPhone layouts, controls, and performance require separate
 physical-device validation.
 
+Issue #16 adds optional discovery of user-owned RCT1 expansion data copied to
+`Documents/rct1`, host-native macOS asset builds, and a configurable iOS bundle
+identifier. The RCT1 picker remains outside this maintenance slice; the
+upstream v0.5.7 upgrade remains a separate compatibility task.
+
 ### 1.2 Explicit non-goals for v1
 - Public App Store release. Distribution is currently source build or a selected private beta channel; see §12.
 - Apple Pencil and multiplayer support.

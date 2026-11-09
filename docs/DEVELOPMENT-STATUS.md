@@ -1,6 +1,6 @@
 # OpenRCT2 Touch development status
 
-- **Last updated:** November 5, 2026
+- **Last updated:** November 9, 2026
 - **Working branch:** `ipad`
 - **Current goal:** [Goal 6 — Pointer, keyboard, and mouse play](../GOAL-LOOP.md#goal-6--pointer-keyboard-and-mouse-play)
 - **Accepted checkpoint:** physical Files import, persistence, and scenario load on July 16
@@ -34,6 +34,28 @@ and launched the app in landscape, remained running, and displayed the native
 missing-game-data prompt. This verifies installation and initial launch only;
 no game data, gameplay, touch acceptance, or performance was tested in that
 smoke pass.
+
+## Source-build and optional data maintenance
+
+The maintenance fixes for [issue #16](https://github.com/chrissotraidis/OpenRCT2Touch/issues/16)
+add optional RCT1 discovery at `Documents/rct1` and repair invalid saved paths
+without overriding valid paths or explicit command-line choices. The native
+picker still imports RCT2/RCT Classic. Source builds also select the host Mac's
+architecture and accept `OPENRCT2_TOUCH_BUNDLE_ID` through both iOS generators;
+the macOS host tools target macOS 11.0 for compatibility with current Xcode.
+The README documents the contributor's Intel Homebrew workaround. The
+upstream v0.5.7 upgrade remains separate from these maintenance fixes.
+
+November 9 verification passed the native macOS build and 1,000-tick headless
+smoke, full iOS device/Simulator and unsigned Xcode builds with custom/default
+bundle IDs, and rejection of a mismatched expected identifier. An x86_64 host
+build and CLI run under Rosetta generated the same engine assets as the native
+build; physical Intel and its Homebrew installation remain untested locally.
+Ten Simulator cases checked RCT1 path selection/persistence with synthetic
+fixtures, including unreadable files. Two more cases used user-owned RCT2
+data only inside an installed Simulator sandbox and reached the rendered title
+screen after RCT2 rediscovery with unreadable optional RCT1 data. Temporary
+sandboxes were removed. Physical RCT1 gameplay remains contributor-reported.
 
 ## Goal ledger
 
