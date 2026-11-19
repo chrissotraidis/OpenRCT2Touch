@@ -158,7 +158,10 @@ namespace OpenRCT2::Ui
     public:
         iOSContext()
         {
-            SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
+            SDL_SetHint(SDL_HINT_ORIENTATIONS,
+                UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad
+                    ? "Portrait PortraitUpsideDown LandscapeLeft LandscapeRight"
+                    : "LandscapeLeft LandscapeRight");
             SDL_SetHint(SDL_HINT_IOS_HIDE_HOME_INDICATOR, "2");
             SDL_SetHint(SDL_HINT_ENABLE_SCREEN_KEYBOARD, "1");
         }
