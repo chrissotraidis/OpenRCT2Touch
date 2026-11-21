@@ -69,12 +69,11 @@ if [[ "$(plutil -extract UIDeviceFamily.0 raw "$APP/Info.plist")" != "1"
 fi
 
 for orientation_key in UISupportedInterfaceOrientations 'UISupportedInterfaceOrientations~ipad'; do
-    for orientation_index in 0 1; do
-        expected=UIInterfaceOrientationLandscapeLeft
-        if [[ "$orientation_index" == "1" ]]; then
-            expected=UIInterfaceOrientationLandscapeRight
-        fi
-        if [[ "$(plutil -extract "$orientation_key.$orientation_index" raw "$APP/Info.plist")" != "$expected" ]]; then
+    # iPad also lists the portrait orientations (an external display needs them),
+    # so look for both landscape entries anywhere in the list.
+    orientations="$(plutil -extract "$orientation_key" json -o - "$APP/Info.plist")"
+    for expected in UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight; do
+        if [[ "$orientations" != *"\"$expected\""* ]]; then
             echo "App bundle must support both landscape orientations on iPhone and iPad." >&2
             exit 1
         fi

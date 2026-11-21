@@ -288,6 +288,5 @@ if(MACOS_BUNDLE)
     install(CODE "
         include(BundleUtilities)
         fixup_bundle(${CMAKE_BINARY_DIR}/${MACOS_APP_NAME} \"\" \"\")
-        "  BUNDLE DESTINATION ${CMAKE_BINARY_DIR}
-    )
+        ")
 endif ()
